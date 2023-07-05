@@ -1,0 +1,33 @@
+name: ges-tool
+help: GCP Enterprise Search Tool for Unstrcu
+version: 0.1.0
+
+environment_variables:
+- name: gcp_project_number
+  required: true
+  help: Set your GCP Enterprise Search Project Number (not project id)
+- name: datastore_name
+  required: true
+  help: Data Store name of the format <data_store>_<some_number>"
+
+commands:
+- name: usearch
+  alias: s
+  help: Perform a single unstructured search query
+
+  args:
+  - name: query 
+    required: true
+    help: search query string
+  - name: page_size 
+    required: false
+    default: "5"
+    help: Number of results to per page. default is 5
+  
+  flags:
+  - long: --force
+    short: -f
+    help: Overwrite existing files
+
+  examples:
+  - ges-tool usearch "how do i make a payment"
