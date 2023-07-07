@@ -11,6 +11,10 @@ environment_variables:
   help: Data Store name of the format <data_store>_<some_number>"
 
 commands:
+- name: install-dependencies
+  alias: i
+  help: Install dependent tools
+
 - name: usearch
   alias: s
   help: Perform a single unstructured search query
@@ -25,9 +29,12 @@ commands:
     help: Number of results to per page. default is 5
   
   flags:
-  - long: --force
-    short: -f
-    help: Overwrite existing files
+  - long: --minimal
+    short: -m
+    help: only show the minumum fields
+  - long: --csv
+    short: -c
+    help: output to csv 
 
   examples:
   - ges-tool usearch "how do i make a payment"
