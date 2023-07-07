@@ -14,6 +14,15 @@ $ chmod +x ./ges-tool
 
 ## Setup
 
+For MacOS users please ensure you have bash v4+ installed. To check run 
+```bash
+$ bash --version
+```
+
+To upgrade follow direction [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba)
+
+
+
 Install dependent tools. This install [jtbl](https://github.com/kellyjonbrazil/jtbl) curently
 
 ```bash
