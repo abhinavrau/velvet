@@ -18,11 +18,11 @@ version_command() {
 # :command.usage
 ges_tool_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool - GCP Enterprise Search Tool for Unstrcu\n"
+    printf "ges-tool - CLI for GCP GenAI App Builder Enterprise Search.\n"
     echo
 
   else
-    printf "ges-tool - GCP Enterprise Search Tool for Unstrcu\n"
+    printf "ges-tool - CLI for GCP GenAI App Builder Enterprise Search.\n"
     echo
 
   fi
@@ -36,6 +36,7 @@ ges_tool_usage() {
   printf "%s\n" "Commands:"
   printf "  %s   Install dependent tools\n" "install-dependencies"
   printf "  %s   Perform a single unstructured search query\n" "usearch             "
+  printf "  %s   Perform a bath search using external file that outputs to csv\n" "batch-search        "
   echo
 
   # :command.long_usage
@@ -61,6 +62,11 @@ ges_tool_usage() {
     # :environment_variable.usage
     printf "  %s\n" "DATASTORE_NAME (required)"
     printf "    Data Store name of the format <data_store>_<some_number>\"\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "Examples:"
+    printf "  Single search with csv output. Only shows the summary and first document link\n  $ ./ges-tool s \"What is the interest rate?\" -c\n  \n  Single search with table output. Only shows the summary and first document\n  link\n  $ ./ges-tool s \"What is the interest rate?\" -m\n  \n   Single search with raw json output\n  $ ./ges-tool s \"What is the interest rate?\" \n  \n  Batch search with input file containing search queries and output a csv file\n  with results. Only shows the summary and first document link\n  $ ./ges-tool b search_terms.txt results_file.csv\n"
     echo
 
   fi
@@ -152,9 +158,55 @@ ges_tool_usearch_usage() {
     printf "    Default: 5\n"
     echo
 
-    # :command.usage_examples
-    printf "%s\n" "Examples:"
-    printf "  ges-tool usearch \"how do i make a payment\"\n"
+  fi
+}
+
+# :command.usage
+ges_tool_batch_search_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "ges-tool batch-search - Perform a bath search using external file that outputs to csv\n"
+    echo
+
+  else
+    printf "ges-tool batch-search - Perform a bath search using external file that outputs to csv\n"
+    echo
+
+  fi
+
+  printf "Alias: b\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n"
+  printf "  ges-tool batch-search --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "INPUT_FILE"
+    printf "    file name containing queries\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "OUTPUT_FILE"
+    printf "    file name containing output\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "PAGE_SIZE"
+    printf "    Number of results to per page. default is 5\n"
+    printf "    Default: 5\n"
     echo
 
   fi
@@ -239,9 +291,11 @@ ges_tool_usearch_command() {
   page_size=${args[page_size]}
   minimal=${args[--minimal]}
   csv=${args[--csv]}
+  file=${args[--file]}
+
   if [[ $minimal ]]; then
       curl -s  -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }' \
-      | jq  '[{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}]' | jtbl
+      | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}' | jtbl
   elif  [[ $csv ]]; then
       curl -s -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }' \
       | jq  '[{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}]' | jtbl -c
@@ -249,6 +303,32 @@ ges_tool_usearch_command() {
       curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }'
 
   fi
+
+}
+
+# :command.function
+ges_tool_batch_search_command() {
+  # src/batch_search_command.sh
+  page_size=${args[page_size]}
+  input_file=${args[input_file]}
+  output_file=${args[output_file]}
+  output="["
+  echo "doing batch from ${input_file}"
+  while IFS= read -r line
+   do
+      if [ -z "$line" ]; then
+          continue;
+      else
+          output+=$(curl -s -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${line}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }' \
+          | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}')
+
+          output+=","
+      fi
+  done < "$input_file"
+  output=${output::-1}
+  output+="]"
+  echo $output | jtbl -c > ${output_file}
+
 }
 
 # :command.parse_requirements
@@ -302,6 +382,13 @@ parse_requirements() {
       action="usearch"
       shift
       ges_tool_usearch_parse_requirements "$@"
+      shift $#
+      ;;
+
+    batch-search | b)
+      action="batch-search"
+      shift
+      ges_tool_batch_search_parse_requirements "$@"
       shift $#
       ;;
 
@@ -463,6 +550,77 @@ ges_tool_usearch_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+ges_tool_batch_search_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        ges_tool_batch_search_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="batch-search"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['input_file']+x} ]]; then
+
+          args['input_file']=$1
+          shift
+        elif [[ -z ${args['output_file']+x} ]]; then
+
+          args['output_file']=$1
+          shift
+        elif [[ -z ${args['page_size']+x} ]]; then
+
+          args['page_size']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['input_file']+x} ]]; then
+    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['output_file']+x} ]]; then
+    printf "missing required argument: OUTPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['page_size']:-} ]] || args['page_size']="5"
+
+}
+
 # :command.initialize
 initialize() {
   version="0.1.0"
@@ -483,6 +641,7 @@ run() {
   case "$action" in
     "install-dependencies") ges_tool_install_dependencies_command ;;
     "usearch") ges_tool_usearch_command ;;
+    "batch-search") ges_tool_batch_search_command ;;
   esac
 }
 
