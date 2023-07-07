@@ -14,20 +14,21 @@ $ chmod +x ./ges-tool
 
 ## Setup
 
-For MacOS users please ensure you have bash v4+ installed. To check run 
+1. For MacOS users please ensure you have bash v4+ installed. To check run 
 ```bash
 $ bash --version
 ```
-
 To upgrade follow direction [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba)
 
+2. Setup [gcloud](https://cloud.google.com/sdk/docs/install-sdk) cli and authenticate to make sure you have access to the project with ES you want to query
 
-
-Install dependent tools. This install [jtbl](https://github.com/kellyjonbrazil/jtbl) curently
+3. Install dependent tools. This install [jtbl](https://github.com/kellyjonbrazil/jtbl) curently
 
 ```bash
 $ ./ges-tool i
 ```
+
+4. Make sure you export the following env variables. The GCP project number and the Enterprise search datastore name
 
 ```bash
 $ export GCP_PROJECT_NUMBER=<gcp-project-number> 
