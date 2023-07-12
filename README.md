@@ -2,6 +2,7 @@
 
 ## Features
 - Call Enterprise Search REST API from the command line
+- Currently only structured and Unstructured search is supported
 - Batch search support and output to CSV
 - Usefull for Acceptance testing
 
