@@ -15,7 +15,7 @@ while IFS= read -r line
 done < "$input_file"
 output=${output::-1}
 output+="]"
-echo $output | jtbl -c > ${output_file}
+echo $output | ./jtbl -c > ${output_file}
 
 
 
