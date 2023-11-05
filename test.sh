@@ -1,11 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Set project root as the working directory
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
-export PROJECT_DIR="$(realpath ".")"
-export SRC="${PROJECT_DIR}/src"
+PROJECT_DIR="$(realpath ".")"
+export PROJECT_DIR
+PATH=$PROJECT_DIR:$PATH 
+export PATH
+SCRIPT_NAME="ges-tool"
+export SCRIPT_NAME
+export SRC="${PROJECT_DIR}"
 export TEST="${PROJECT_DIR}/test"
 export BUILD="${PROJECT_DIR}/build"
 
-test/lib/bash_unit/bash_unit test/*.sh
+test/lib/bash_unit/bash_unit test/test*.sh
+

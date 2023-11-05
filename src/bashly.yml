@@ -11,9 +11,9 @@ environment_variables:
   help: Data Store name of the format <data_store>_<some_number>"
 
 commands:
-- name: install-dependencies
+- name: init
   alias: i
-  help: Install dependent tools
+  help: Checks for gcloud authentication and installs dependent tools
 
 - name: usearch
   alias: s
