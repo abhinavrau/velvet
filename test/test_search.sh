@@ -15,3 +15,21 @@ function test_search_csv() {
   fi
   assert_equals 0 "$success"
 }
+
+function test_search_json() {
+
+  cd "${PROJECT_DIR}" || exit
+  result=$("${SRC}"/"${SCRIPT_NAME}" usearch 'How I make a payment using the mobile app' > /tmp/search_result_1.json 2>/dev/null)
+
+  assert_equals 0 $?
+
+
+  # Check for valid json
+  if jq empty < /tmp/search_result_1.json >/dev/null 2>&1; then
+     # JSON is valid.
+    success=0
+  else 
+    success=1
+  fi
+  assert_equals 0 "$success"
+}
