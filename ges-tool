@@ -279,7 +279,7 @@ ges_tool_init_command() {
      # Destination file to save the downloaded content
     file_path=jtbl-1.5.2-"${platform_lower}".tar.gz
 
-    url=https://github.com/kellyjonbrazil/jtbl/releases/donload/v1.5.2/jtbl-1.5.2-"${platform_lower}".tar.gz
+    url=https://github.com/kellyjonbrazil/jtbl/releases/download/v1.5.2/jtbl-1.5.2-"${platform_lower}".tar.gz
 
     # Use curl to download the file
     response_code=$(curl -LO "$url" -w "%{http_code}")
