@@ -56,13 +56,10 @@ commands:
     default: "5"
     help: Number of results to per page. default is 5
 
-  # flags:
-  # - long: --dry-run
-  #   short: -d
-  #   help: Do a dry run outputing actions to perform without calling Vertex AI APIs.
-  # - long: --format
-  #   short: -c
-  #   help: output to csv 
+  flags:
+   - long: --format
+     short: -c
+     help: output to csv 
 
 examples: |-
     Single search with csv output. Only shows the summary and first document link

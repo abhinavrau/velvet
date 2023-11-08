@@ -182,13 +182,19 @@ ges_tool_batch_search_usage() {
   echo
 
   printf "%s\n" "Usage:"
-  printf "  ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n"
+  printf "  ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n"
   printf "  ges-tool batch-search --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "Options:"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "--format, -c"
+    printf "    output to csv\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
@@ -367,9 +373,15 @@ ges_tool_batch_search_command() {
       if [ -z "$line" ]; then
           continue;
       else
-          output+=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${line}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }' \
-          | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}')
+          command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${line}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }')
 
+          error=$(echo "$command_output" | jq '.error.code' )
+          if [ "$error" = '401' ]; then
+              echo "Authentication failed with credentials in GCP_ACCESS_TOKEN"
+              exit 1
+          else
+             output+=$(echo "$command_output" | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}')
+          fi
           output+=","
       fi
   done < "$input_file"
@@ -627,6 +639,13 @@ ges_tool_batch_search_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --format | -c)
+
+        # :flag.case_no_arg
+        args['--format']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -660,11 +679,11 @@ ges_tool_batch_search_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['input_file']+x} ]]; then
-    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n" >&2
+    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n" >&2
     exit 1
   fi
   if [[ -z ${args['output_file']+x} ]]; then
-    printf "missing required argument: OUTPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE]\n" >&2
+    printf "missing required argument: OUTPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n" >&2
     exit 1
   fi
 
