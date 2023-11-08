@@ -2,7 +2,7 @@ page_size=${args[page_size]}
 input_file=${args[input_file]}
 output_file=${args[output_file]}
 
-token=$(gcloud auth print-access-token)
+token=${GCP_ACCESS_TOKEN}
 
 output="["
 echo "doing batch from ${input_file}"

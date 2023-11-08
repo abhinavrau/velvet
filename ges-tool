@@ -36,7 +36,7 @@ ges_tool_usage() {
   printf "%s\n" "Commands:"
   printf "  %s   Checks for gcloud authentication and installs dependent tools\n" "init        "
   printf "  %s   Perform a single unstructured search query\n" "usearch     "
-  printf "  %s   Perform a bath search using external file that outputs to csv\n" "batch-search"
+  printf "  %s   Perform a batch search using external file that outputs to csv\n" "batch-search"
   echo
 
   # :command.long_usage
@@ -62,6 +62,11 @@ ges_tool_usage() {
     # :environment_variable.usage
     printf "  %s\n" "DATASTORE_NAME (required)"
     printf "    Data Store name of the format <data_store>_<some_number>\"\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "GCP_ACCESS_TOKEN (required)"
+    printf "    GCP access-token. i.e. output of  \`gcloud auth print-access-token\` or obtain\n    access token using service account.\n"
     echo
 
     # :command.usage_examples
@@ -155,7 +160,7 @@ ges_tool_usearch_usage() {
     # :argument.usage
     printf "  %s\n" "PAGE_SIZE"
     printf "    Number of results to per page. default is 5\n"
-    printf "    Default: 5\n"
+    printf "    Default: 3\n"
     echo
 
   fi
@@ -164,11 +169,11 @@ ges_tool_usearch_usage() {
 # :command.usage
 ges_tool_batch_search_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool batch-search - Perform a bath search using external file that outputs to csv\n"
+    printf "ges-tool batch-search - Perform a batch search using external file that outputs to csv\n"
     echo
 
   else
-    printf "ges-tool batch-search - Perform a bath search using external file that outputs to csv\n"
+    printf "ges-tool batch-search - Perform a batch search using external file that outputs to csv\n"
     echo
 
   fi
@@ -314,17 +319,34 @@ ges_tool_usearch_command() {
   csv=${args[--csv]}
   file=${args[--file]}
 
-  token=$(gcloud auth print-access-token)
+  token=${GCP_ACCESS_TOKEN}
+  flag=''
 
   if [[ $minimal ]]; then
-      curl -s  -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }' \
-      | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}' | ./jtbl
+      output=$(curl -s  -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }')
+      use_jtbl=1
   elif  [[ $csv ]]; then
-      curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }' \
-      | jq  '[{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}]' | ./jtbl -c
+      output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }')
+      flag='-c'
+      use_jtbl=1
   else
-      curl -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }'
+      output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }')
+  fi
 
+  if [[ $output ]]; then
+      error=$(echo "$output" | jq '.error.code' )
+      if [ "$error" = '401' ]; then
+          echo "Authentication failed with credentials in GCP_ACCESS_TOKEN"
+          exit 1
+      else
+          if [[ $use_jtbl ]]; then
+
+              echo "$output" | jq  '[{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}]' | ./jtbl $flag
+          else
+              echo "$output"
+
+          fi
+      fi
   fi
 
 }
@@ -336,7 +358,7 @@ ges_tool_batch_search_command() {
   input_file=${args[input_file]}
   output_file=${args[output_file]}
 
-  token=$(gcloud auth print-access-token)
+  token=${GCP_ACCESS_TOKEN}
 
   output="["
   echo "doing batch from ${input_file}"
@@ -388,6 +410,10 @@ parse_requirements() {
   fi
   if [[ -z "${DATASTORE_NAME:-}" ]]; then
     printf "missing required environment variable: DATASTORE_NAME\n" >&2
+    exit 1
+  fi
+  if [[ -z "${GCP_ACCESS_TOKEN:-}" ]]; then
+    printf "missing required environment variable: GCP_ACCESS_TOKEN\n" >&2
     exit 1
   fi
 
@@ -572,7 +598,7 @@ ges_tool_usearch_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['page_size']:-} ]] || args['page_size']="5"
+  [[ -n ${args['page_size']:-} ]] || args['page_size']="3"
 
 }
 

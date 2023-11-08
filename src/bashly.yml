@@ -9,6 +9,9 @@ environment_variables:
 - name: datastore_name
   required: true
   help: Data Store name of the format <data_store>_<some_number>"
+- name: gcp_access_token
+  required: true
+  help: GCP access-token. i.e. output of  `gcloud auth print-access-token` or obtain access token using service account.
 
 commands:
 - name: init
@@ -25,7 +28,7 @@ commands:
     help: search query string
   - name: page_size 
     required: false
-    default: "5"
+    default: "3"
     help: Number of results to per page. default is 5
   
   flags:
@@ -39,7 +42,7 @@ commands:
      
 - name: batch-search
   alias: b
-  help: Perform a bath search using external file that outputs to csv
+  help: Perform a batch search using external file that outputs to csv
 
   args:
   - name: input_file
@@ -52,6 +55,14 @@ commands:
     required: false
     default: "5"
     help: Number of results to per page. default is 5
+
+  # flags:
+  # - long: --dry-run
+  #   short: -d
+  #   help: Do a dry run outputing actions to perform without calling Vertex AI APIs.
+  # - long: --format
+  #   short: -c
+  #   help: output to csv 
 
 examples: |-
     Single search with csv output. Only shows the summary and first document link

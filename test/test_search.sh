@@ -3,7 +3,7 @@
 function test_search_csv() {
 
   cd "${PROJECT_DIR}" || exit
-  result=$("${SRC}"/"${SCRIPT_NAME}" usearch 'How I make a payment using the mobile app' -c > /tmp/search_result_1.csv)
+  result=$("${SRC}"/"${SCRIPT_NAME}" usearch 'What was the Google Cloud revenue in Q4 of 2022?' -c > /tmp/search_result_1.csv)
 
   assert_equals 0 $?
 
@@ -19,7 +19,7 @@ function test_search_csv() {
 function test_search_json() {
 
   cd "${PROJECT_DIR}" || exit
-  result=$("${SRC}"/"${SCRIPT_NAME}" usearch 'How I make a payment using the mobile app' > /tmp/search_result_1.json 2>/dev/null)
+  result=$("${SRC}"/"${SCRIPT_NAME}" usearch 'What was the Google Cloud revenue in Q4 of 2022?' > /tmp/search_result_1.json 2>/dev/null)
 
   assert_equals 0 $?
 
