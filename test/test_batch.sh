@@ -3,7 +3,7 @@
 function test_search_batch() {
 
   cd "${PROJECT_DIR}" || exit
-  result=$("${SRC}"/"${SCRIPT_NAME}" batch-search "${TEST}"/data/batch_test.txt  /tmp/batch_search_result_1.csv)
+  result=$("${SRC}"/"${SCRIPT_NAME}" batch-search "${TEST}"/data/batch_test.txt > /tmp/batch_search_result_1.csv)
 
   assert_equals 0 $?
 

@@ -3,6 +3,12 @@ help: CLI for GCP GenAI App Builder Enterprise Search.
 version: 0.1.0
 
 environment_variables:
+- name: project_id
+  required: true
+  help: GCP Project where Palm bison API is enabled and available
+- name: location_id
+  required: true
+  help: GCP Region to use for the Palm bison API is enabled and available
 - name: gcp_project_number
   required: true
   help: Set your GCP Enterprise Search Project Number (not project id)
@@ -10,8 +16,8 @@ environment_variables:
   required: true
   help: Data Store name of the format <data_store>_<some_number>"
 - name: gcp_access_token
-  required: true
-  help: GCP access-token. i.e. output of  `gcloud auth print-access-token` or obtain access token using service account.
+  required: false
+  help: Optional - GCP access-token. To be used if access-token is obtained using third party tool like Vault. If this is not set then  `gcloud auth print-access-token` is used to obtain access token. 
 
 commands:
 - name: init
@@ -48,18 +54,19 @@ commands:
   - name: input_file
     required: true
     help: file name containing queries
-  - name: output_file
-    required: true
-    help: file name containing output 
   - name: page_size 
     required: false
     default: "5"
     help: Number of results to per page. default is 5
 
-  flags:
-   - long: --format
-     short: -c
-     help: output to csv 
+- name: batch-verify
+  alias: v
+  help: Perform a batch search and verify using an input csv file that outputs to csv
+  
+  args:
+  - name: input_file
+    required: true
+    help: csv file containing queries and expected results format is - 
 
 examples: |-
     Single search with csv output. Only shows the summary and first document link

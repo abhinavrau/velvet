@@ -1,2 +1,3 @@
 id,query,expected_summary,expected_document_link 
-1,How much revenue did Google Cloud division's make in 2022?,Google Cloud's revenue increased by $7.1 billion from 2021 to 2022,gs://cloud-samples-data/gen-app-builder/search/alphabet-investor-pdfs/2022_alphabet_annual_report.pdf
+1, What is Google's revenue for year ending 2022?,Google Cloud's revenue increased by $7.1 billion from 2021 to 2022,gs://cloud-samples-data/gen-app-builder/search/alphabet-investor-pdfs/2022_alphabet_annual_report.pdf
+2, What is Google's revenue for Q1 2023 in billions?,Google Cloud's revenue increased by $7.1 billion from 2021 to 2022,gs://cloud-samples-data/gen-app-builder/search/alphabet-investor-pdfs/2022_alphabet_annual_report.pdf

@@ -5,6 +5,11 @@ csv=${args[--csv]}
 file=${args[--file]}
 
 token=${GCP_ACCESS_TOKEN}
+
+if [ -z "$token" ]; then 
+    token=$(gcloud auth print-access-token)
+fi
+
 flag=''
 
 if [[ $minimal ]]; then

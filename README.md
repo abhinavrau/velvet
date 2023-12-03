@@ -1,4 +1,5 @@
-# ges-tool - Bash CLI to interact with GCP's GenAI powered [Enterprise Search](https://cloud.google.com/enterprise-search)
+# ges-tool
+ - Bash CLI to interact with GCP's GenAI powered [Enterprise Search](https://cloud.google.com/enterprise-search)
 
 ## Features
 - Call Enterprise Search REST API from the command line

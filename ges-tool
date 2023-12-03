@@ -37,6 +37,7 @@ ges_tool_usage() {
   printf "  %s   Checks for gcloud authentication and installs dependent tools\n" "init        "
   printf "  %s   Perform a single unstructured search query\n" "usearch     "
   printf "  %s   Perform a batch search using external file that outputs to csv\n" "batch-search"
+  printf "  %s   Perform a batch search and verify using an input csv file that outputs to csv\n" "batch-verify"
   echo
 
   # :command.long_usage
@@ -55,6 +56,16 @@ ges_tool_usage() {
     printf "%s\n" "Environment Variables:"
 
     # :environment_variable.usage
+    printf "  %s\n" "PROJECT_ID (required)"
+    printf "    GCP Project where Palm bison API is enabled and available\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "LOCATION_ID (required)"
+    printf "    GCP Region to use for the Palm bison API is enabled and available\n"
+    echo
+
+    # :environment_variable.usage
     printf "  %s\n" "GCP_PROJECT_NUMBER (required)"
     printf "    Set your GCP Enterprise Search Project Number (not project id)\n"
     echo
@@ -65,8 +76,8 @@ ges_tool_usage() {
     echo
 
     # :environment_variable.usage
-    printf "  %s\n" "GCP_ACCESS_TOKEN (required)"
-    printf "    GCP access-token. i.e. output of  \`gcloud auth print-access-token\` or obtain\n    access token using service account.\n"
+    printf "  %s\n" "GCP_ACCESS_TOKEN"
+    printf "    Optional - GCP access-token. To be used if access-token is obtained using\n    third party tool like Vault. If this is not set then  \`gcloud auth\n    print-access-token\` is used to obtain access token.\n"
     echo
 
     # :command.usage_examples
@@ -182,19 +193,13 @@ ges_tool_batch_search_usage() {
   echo
 
   printf "%s\n" "Usage:"
-  printf "  ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n"
+  printf "  ges-tool batch-search INPUT_FILE [PAGE_SIZE]\n"
   printf "  ges-tool batch-search --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "Options:"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "--format, -c"
-    printf "    output to csv\n"
-    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
@@ -210,14 +215,49 @@ ges_tool_batch_search_usage() {
     echo
 
     # :argument.usage
-    printf "  %s\n" "OUTPUT_FILE"
-    printf "    file name containing output\n"
-    echo
-
-    # :argument.usage
     printf "  %s\n" "PAGE_SIZE"
     printf "    Number of results to per page. default is 5\n"
     printf "    Default: 5\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ges_tool_batch_verify_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "ges-tool batch-verify - Perform a batch search and verify using an input csv file that outputs to csv\n"
+    echo
+
+  else
+    printf "ges-tool batch-verify - Perform a batch search and verify using an input csv file that outputs to csv\n"
+    echo
+
+  fi
+
+  printf "Alias: v\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  ges-tool batch-verify INPUT_FILE\n"
+  printf "  ges-tool batch-verify --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "INPUT_FILE"
+    printf "    csv file containing queries and expected results format is -\n"
     echo
 
   fi
@@ -326,6 +366,12 @@ ges_tool_usearch_command() {
   file=${args[--file]}
 
   token=${GCP_ACCESS_TOKEN}
+
+  if [ -z "$token" ]; then
+
+      token=$(gcloud auth print-access-token)
+  fi
+
   flag=''
 
   if [[ $minimal ]]; then
@@ -362,9 +408,13 @@ ges_tool_batch_search_command() {
   # src/batch_search_command.sh
   page_size=${args[page_size]}
   input_file=${args[input_file]}
-  output_file=${args[output_file]}
 
   token=${GCP_ACCESS_TOKEN}
+
+  if [ -z "$token" ]; then
+
+      token=$(gcloud auth print-access-token)
+  fi
 
   output="["
   echo "doing batch from ${input_file}"
@@ -373,21 +423,165 @@ ges_tool_batch_search_command() {
       if [ -z "$line" ]; then
           continue;
       else
-          command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${line}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }')
+          command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${line}"'", "page_size": "1", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 2}, "summarySpec":{"summaryResultCount": 3}} }')
 
           error=$(echo "$command_output" | jq '.error.code' )
           if [ "$error" = '401' ]; then
-              echo "Authentication failed with credentials in GCP_ACCESS_TOKEN"
+              echo "Authentication failed."
               exit 1
           else
-             output+=$(echo "$command_output" | jq  '{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}')
+             output+=$(echo "$command_output" | jq  '{summary: .summary.summaryText, link_1: .results[0].document.derivedStructData.link, link_2: .results[1].document.derivedStructData.link, link_3: .results[2].document.derivedStructData.link}')
           fi
           output+=","
       fi
   done < "$input_file"
   output=${output::-1}
   output+="]"
-  echo "$output" | ./jtbl -c > "${output_file}"
+  echo "$output" | ./jtbl -c
+
+}
+
+# :command.function
+ges_tool_batch_verify_command() {
+  # src/batch_verify_command.sh
+  #inspect_args
+  input_file=${args[input_file]}
+  token=${GCP_ACCESS_TOKEN}
+
+  if [ -z "$token" ]; then
+
+      token=$(gcloud auth print-access-token)
+  fi
+
+  # Check if the file exists
+  if [ ! -f "$input_file" ]; then
+    echo "File not found: $input_file"
+    exit 1
+  fi
+
+  # Read the CSV file line by line
+  read -r header < "$input_file" # Read the first line as header
+  column_names=($(echo "$header" | tr ',' '\n')) # Split header into array based on comma delimiter
+
+  # Verify column names or take any actions based on them
+  expected_columns=("id" "query" "expected_summary" "expected_document_link_1" "expected_document_link_2") # Define expected column names
+  if [ "${#column_names[@]}" -ne "${#expected_columns[@]}" ]; then
+    echo "Column count doesn't match!"
+    exit 1
+  fi
+
+  for ((i = 0; i < ${#expected_columns[@]}; i++)); do
+    if [ "${column_names[$i]}" != "${expected_columns[$i]}" ]; then
+      echo "Column '${expected_columns[$i]}' not found!"
+      exit 1
+    fi
+  done
+
+  ids=()
+  queries=()
+  expected_summaries=()
+  expected_document_links_1=()
+  expected_document_links_2=()
+
+  # Read the rest of the rows and store individual fields in arrays
+  while IFS=',' read -r id query expected_summary expected_document_link_1 expected_document_link_2 ; do
+    ids+=("$id")
+    queries+=("$query")
+    expected_summaries+=("$expected_summary")
+    expected_document_links_1+=("$expected_document_link_1")
+    expected_document_links_2+=("$expected_document_link_2")
+  done < <(tail -n +2 "$input_file")
+
+  output="["
+  # Display or process the arrays
+
+  for ((i = 0; i < ${#ids[@]}; i++)); do
+    #echo "ID: ${ids[$i]}, query: ${queries[$i]}, expected_summary: ${expected_summaries[$i]}, expected_document_link: ${expected_document_links[$i]}"
+    # Skip line with empty id field
+    if [ -z "${ids[$i]}" ]; then
+        continue;
+    else
+        current_id="${ids[$i]}"
+        expected_link_1="${expected_document_links_1[$i]}"
+        expected_link_2="${expected_document_links_2[$i]}"
+
+        command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${queries[$i]}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 3}} }')
+
+        error=$(echo "$command_output" | jq '.error.code' )
+        if [ "$error" = '401' ]; then
+            echo "Authentication failed."
+            exit 1
+        else
+            summary_to_match=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
+            actual_link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' )
+            actual_link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' )
+
+            if [ "$actual_link_1" == "${expected_document_links_1[$current_id]}" ]; then
+               link_1_match="matched"
+            else
+
+               link_1_match="not_matched"
+            fi
+
+            if [ "$actual_link_2" == "${expected_document_links_2[$current_id]}" ]; then
+               link_2_match="matched"
+            else
+
+               link_2_match="not_matched"
+            fi
+
+            expected_summary=${expected_summaries[$i]}
+              # Verify the summary by calling text-bison
+            prompt="You will get two answers to a question, you should determine if they are semantically similar or not.
+
+              examples - answer_1: I was created by X. answer_2: X created me. output:same
+
+              answer_1:There are 52 days in a year. answer_2: A year is fairly long. output:different"
+            full_payload=$prompt" Now answer answer_1: $summary_to_match,
+                answer_2: $expected_summary
+                output:"
+
+            jsonPayload="
+
+            {
+                    \"instances\": [
+                        {
+                            \"content\": \"${full_payload}\"
+                        }
+                    ],
+                    \"parameters\": {
+                        \"candidateCount\": 1,
+                        \"maxOutputTokens\": 1024,
+                        \"temperature\": 0.2
+                    }
+            }"
+            #echo "$jsonPayload"
+
+            API_ENDPOINT="${LOCATION_ID}-aiplatform.googleapis.com"
+            MODEL_ID="text-bison"
+
+            match_result=$(curl \
+            -s \
+            -X POST \
+            -H "Authorization: Bearer $token" \
+            -H "Content-Type: application/json" \
+            "https://${API_ENDPOINT}/v1/projects/${PROJECT_ID}/locations/${LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
+
+            summary_match=$(echo "$match_result" | jq '.predictions[0].content' | sed 's/"//g')
+
+            output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary_to_match\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$actual_link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$actual_link_2\"  ,\"link_2_match\": \"$link_2_match\"}"
+
+        fi
+        output+=","
+    fi
+  done
+
+  # remove the last comma
+  output=${output::-1}
+  # close the array
+  output+="]"
+
+  echo "$output" | ./jtbl -c
 
 }
 
@@ -416,16 +610,20 @@ parse_requirements() {
 
   # :command.environment_variables_filter
 
+  if [[ -z "${PROJECT_ID:-}" ]]; then
+    printf "missing required environment variable: PROJECT_ID\n" >&2
+    exit 1
+  fi
+  if [[ -z "${LOCATION_ID:-}" ]]; then
+    printf "missing required environment variable: LOCATION_ID\n" >&2
+    exit 1
+  fi
   if [[ -z "${GCP_PROJECT_NUMBER:-}" ]]; then
     printf "missing required environment variable: GCP_PROJECT_NUMBER\n" >&2
     exit 1
   fi
   if [[ -z "${DATASTORE_NAME:-}" ]]; then
     printf "missing required environment variable: DATASTORE_NAME\n" >&2
-    exit 1
-  fi
-  if [[ -z "${GCP_ACCESS_TOKEN:-}" ]]; then
-    printf "missing required environment variable: GCP_ACCESS_TOKEN\n" >&2
     exit 1
   fi
 
@@ -453,6 +651,13 @@ parse_requirements() {
       action="batch-search"
       shift
       ges_tool_batch_search_parse_requirements "$@"
+      shift $#
+      ;;
+
+    batch-verify | v)
+      action="batch-verify"
+      shift
+      ges_tool_batch_verify_parse_requirements "$@"
       shift $#
       ;;
 
@@ -639,13 +844,6 @@ ges_tool_batch_search_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-      # :flag.case
-      --format | -c)
-
-        # :flag.case_no_arg
-        args['--format']=1
-        shift
-        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -658,10 +856,6 @@ ges_tool_batch_search_parse_requirements() {
         if [[ -z ${args['input_file']+x} ]]; then
 
           args['input_file']=$1
-          shift
-        elif [[ -z ${args['output_file']+x} ]]; then
-
-          args['output_file']=$1
           shift
         elif [[ -z ${args['page_size']+x} ]]; then
 
@@ -679,16 +873,68 @@ ges_tool_batch_search_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['input_file']+x} ]]; then
-    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n" >&2
-    exit 1
-  fi
-  if [[ -z ${args['output_file']+x} ]]; then
-    printf "missing required argument: OUTPUT_FILE\nusage: ges-tool batch-search INPUT_FILE OUTPUT_FILE [PAGE_SIZE] [OPTIONS]\n" >&2
+    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-search INPUT_FILE [PAGE_SIZE]\n" >&2
     exit 1
   fi
 
   # :command.default_assignments
   [[ -n ${args['page_size']:-} ]] || args['page_size']="5"
+
+}
+
+# :command.parse_requirements
+ges_tool_batch_verify_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        ges_tool_batch_verify_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="batch-verify"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['input_file']+x} ]]; then
+
+          args['input_file']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['input_file']+x} ]]; then
+    printf "missing required argument: INPUT_FILE\nusage: ges-tool batch-verify INPUT_FILE\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -713,6 +959,7 @@ run() {
     "init") ges_tool_init_command ;;
     "usearch") ges_tool_usearch_command ;;
     "batch-search") ges_tool_batch_search_command ;;
+    "batch-verify") ges_tool_batch_verify_command ;;
   esac
 }
 
