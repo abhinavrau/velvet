@@ -34,41 +34,36 @@ To upgrade follow direction [here](https://itnext.io/upgrading-bash-on-macos-713
 3. Install dependent tools. This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) curently
 
 ```bash
-$ ./vlvt i
+$ ./vlvt init
 ```
 
-4. Make sure you export the following env variables. The GCP project number and the Enterprise search datastore name
+1. Make sure you export the following env variables.
 
 ```bash
-$ export GCP_PROJECT_NUMBER=<gcp-project-number> 
-$ export DATASTORE_NAME=<search_datastore_name>
+$ export GCP_PROJECT_NUMBER=<vertex-ai-search-gcp-project-number> 
+$ export DATASTORE_NAME=<vertex-ai-search-search_datastore_name> 
+$ export PROJECT_ID=<palm-text-bison-project-id> # used for matching summaries
+$ export LOCATION_ID=<palm-text-bison-region-name>
 ```
 
-## Simple search
-Returns the raw JSON reply from the API
-
+## Examples
+Single search with csv output. Only shows the summary and first document link
 ```bash
-$ ./vlvt s '<search query>'
+    $ ./vlvt search "What is Google's revenue for year ending 2022?" 
 ```
-
-## Minimal Search
-Only returns the top summary and it's relevant document reference
+Single search with table output. Only shows the summary and first document link
 ```bash
-$ ./vlvt s '<search query>' -m
+    $ ./vlvt s "What is Google's revenue for year ending 2022?" --format=table 
 ```
-
-## Search with output in CSV format
-Only returns the top summary and it's relevant document reference
+Single search with json output
 ```bash
-$ ./vlvt s '<search query>' -c
+    $ ./vlvt s "What is Google's revenue for year ending 2022?" -f=json 
 ```
-
-## Batch CSV 
-
-Run query from a external text file and output to csv. Text file contains one query per line
-
+Batch search with input file containing search queries and output a csv file with results. Only shows the summary and first document link
 ```bash
-$ ./vlvt b input_file_with_queries output_csv_file
+    $ ./vlvt bsearch test/data/batch_test.txt --format=table 
 ```
-
-## This is not an Official Google product
+Batch search AND verify with input file containing search queries with expected resutls and output results to a csv file.
+```bash
+    $ ./vlvt verify test/data/verification_test_with_prompt.csv --format=csv
+  ```

@@ -7,7 +7,7 @@ function test_search_csv() {
   cd "${PROJECT_DIR}" || exit
   TMP_FILE=$(mktemp)
 
-  result=$("${SRC}"/"${SCRIPT_NAME}" search """$question""" -f=csv > "$TMP_FILE" 2>/dev/null)
+  result=$("${SRC}"/"${SCRIPT_NAME}" search """$question""" -f=csv > "$TMP_FILE")
   # check is command ran successfully
   assert_equals 0 $?  "search command returned failure"
 
@@ -24,7 +24,7 @@ function test_search_json() {
   cd "${PROJECT_DIR}" || exit
   TMP_FILE=$(mktemp)
   
-  result=$("${SRC}"/"${SCRIPT_NAME}" search """$question""" -f=json > "$TMP_FILE" 2>/dev/null)
+  result=$("${SRC}"/"${SCRIPT_NAME}" search """$question""" -f=json > "$TMP_FILE")
   # check is command ran successfully
   assert_equals 0 $?  "search command returned failure"
 

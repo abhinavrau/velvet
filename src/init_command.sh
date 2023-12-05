@@ -1,11 +1,21 @@
 if [ -f "jtbl" ]; then
   echo "The jbtl tool is already installed."
 else
+  
+  os=$(uname -s)
+  arch=-$(uname -m)
+
+  # For macOS stick to x86 since no arm build yet.
+  if [ "$arch" == "Darwin" ]; then
+      arch="x86_64"
+  fi
+
   # Determine the platform.
-  platform=$(uname -s)-$(uname -m)
+  platform=$os-$arch
   # to lower case
   platform_lower=${platform,,}  
-
+  
+  
    # Destination file to save the downloaded content
   file_path=jtbl-1.5.2-"${platform_lower}".tar.gz
 
