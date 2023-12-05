@@ -17,20 +17,20 @@ For offline evaluation metric creation for Vertex AI Search
 ## Examples
 The folliwng use the Alphabet annual reports and 10K filings. See [this link](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to set it up.
 
-Batch search AND verify with input file [verify_test_success.csv](test/datatest/data/verify_test_success.csv)  containing search queries with expected results and output results to a csv file.
+Batch search AND verify with input file [verify_test_with_prompt.csv](test/datatest/data/verify_test_with_prompt.csv)  containing search queries with expected results and output results to a csv file.
 ```bash
-./vlvt verify test/data/verify_test_success.csv --format=csv > verify_results.csv
+./vlvt verify test/data/verify_test_with_prompt.csv --format=csv > verify_results.csv
 ```
 
 Output as table format for humans
 ```bash
-./vlvt verify test/data/verify_test_success.csv -f=table
+./vlvt verify test/data/verify_test_with_prompt.csv -f=table
 ```
 ![](images/verify_table.png)
 
-Batch search with input file [batch_test_success.txt](test/datatest/data/batch_test_success.txt) containing search queries and output a table.
+Batch search with input file [batch_test_with_prompt.txt](test/datatest/data/batch_test_with_prompt.txt) containing search queries and output a table.
 ```bash
-./vlvt bsearch test/datatest/data/batch_test_success.txt -f=csv > batch_results.csv
+./vlvt bsearch test/datatest/data/batch_test_with_prompt.txt -f=csv > batch_results.csv
 ```
 
 Single search with table output.

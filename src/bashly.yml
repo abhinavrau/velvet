@@ -83,10 +83,19 @@ commands:
   args:
   - name: input_file
     required: true
-    help: csv file containing queries and expected results format is - 
-  
+    help: csv file containing queries and expected results format is - id, query, expected_summary, expected_document_link_1, expected_document_link_2
+      
   flags:
   - *format
+  - long: --mrr-threshold
+    short: -t
+    arg: mrr-threshold
+    help: Mean Reciprocal Rank (MRR) threshold to be above. If specified it will fail if MRR is below this threshold.
+  - long: --summary-threshold
+    short: -s
+    arg: summary-threshold
+    help: Average Summary Precision threshold to be above. If specified it will fail if Average Summary Precision is below this threshold.
+
   
   dependencies:
   - curl

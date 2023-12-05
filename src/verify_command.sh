@@ -2,6 +2,8 @@
 # shellcheck disable=SC2154
 input_file=${args[input_file]}
 format=${args[--format]}
+mrr_threshold=${args[--mrr-threshold]}
+summary_threshold=${args[--summary-threshold]}
 token=${GCP_ACCESS_TOKEN}
 
 if [ -z "$token" ]; then 
@@ -21,7 +23,7 @@ column_names=($(echo "$header" | tr ',' '\n')) # Split header into array based o
 # Verify column names or take any actions based on them
 expected_columns=("id" "query" "expected_summary" "expected_document_link_1" "expected_document_link_2") # Define expected column names
 if [ "${#column_names[@]}" -ne "${#expected_columns[@]}" ]; then
-  echo "Column count doesn't match!"
+  echo "Column count doesn't match! Run verify --help for format"
   exit 1
 fi
 
@@ -49,9 +51,10 @@ done < <(tail -n +2 "$input_file")
 
 output=""
 summary_correct_count=0
-total_documents=${#ids[@]}
+total_mrr=0
+total_rows=${#ids[@]}
 # Loop through the entries and call vertex ai search and then call palm bison to match the summaries
-for ((i = 0; i < total_documents; i++)); do
+for ((i = 0; i < total_rows; i++)); do
   # Skip line with empty id field
   if [ -z "${ids[$i]}" ]; then
       continue;
@@ -83,10 +86,11 @@ for ((i = 0; i < total_documents; i++)); do
 
     ## Calculate the MRR
     mrr=$(rank_reciprocal_at_2 "${link_1}" "${link_2}" "${expected_link_1}" "${expected_link_2}")
-   
+    total_mrr=$(echo "scale=4; $mrr + $total_mrr " | bc)
+
     # NDCG
     ndcg=$(calc_ndcg "${link_1}" "${link_2}" "${expected_link_1}" "${expected_link_2}")
-    #echo "$ndcg"
+ 
     # Calculate the 
     expected_summary=${expected_summaries[$i]}
     # Verify the summary by calling text-bison to do a semantic comparison to see if it matches expected summary
@@ -100,12 +104,47 @@ for ((i = 0; i < total_documents; i++)); do
 
     # Create JSONL output
     #output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\", \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
-    output+="{\"id\": \"$current_id\", \"question\": \"$query\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" , \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"mrr@2\": \"$mrr\",  \"mAP@2\": \"$map\", \"ndcg@2\": \"$ndcg\"}"$'\n'
-
-
+    output+="{\"id\": \"$current_id\", \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"mrr\": \"$mrr\",  \"mAP@2\": \"$map\", \"ndcg@2\": \"$ndcg\", \"question\": \"$query\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" }"$'\n'
       
   fi
 done
 
+average_summary_precision=$(echo "scale=4; $summary_correct_count / $total_rows " | bc)
+overall_mrr=$(echo "scale=4; $total_mrr / $total_rows " | bc)
+mrr_string=""
+average_summary_precision_string=""
+exit_code=0
+# Check if the MRR threshold is set
+if [ -z "$mrr_threshold" ]; then 
+  exit_code=0
+else 
+  if (( $(echo "$overall_mrr > $mrr_threshold" | bc -l) )); then
+     mrr_string="PASSED: MRR"
+  else
+     mrr_string="FAILED: MRR"
+     exit_code=1  
+  fi 
+fi
+if [ -z "$summary_threshold" ]; then 
+  exit_code=$exit_code
+else 
+  if (( $(echo "$average_summary_precision > $summary_threshold" | bc -l) )); then
+     average_summary_precision_string="PASSED: SummaryP"
+  else
+     average_summary_precision_string="FAILED: SummaryP"
+     exit_code=1  
+  fi 
+fi
+# Summary Row
+output+="{\"id\": \"\", \"summary_p\": \"$average_summary_precision\", \"@p0\": \"\", \"mrr\": \"$overall_mrr\",  \"mAP@2\": \"\", \"ndcg@2\": \"\", \"question\": \"\", \"actual_summary\": \"\", \"expected_summary\": \"\" , \"expected_link_1\": \"\"  ,  \"actual_link_1\": \"\", \"expected_link_2\": \"\" ,  \"actual_link_2\": \"\" }"$'\n'
+
+if [[ -n "$mrr_threshold" || -n  "$summary_threshold" ]]; then
+  output+="{\"id\": \"\", \"summary_p\": \"$average_summary_precision_string\", \"@p0\": \"\", \"mrr\": \"$mrr_string\",  \"mAP@2\": \"\", \"ndcg@2\": \"\", \"question\": \"\", \"actual_summary\": \"\", \"expected_summary\": \"\" , \"expected_link_1\": \"\"  ,  \"actual_link_1\": \"\", \"expected_link_2\": \"\" ,  \"actual_link_2\": \"\" }"$'\n'
+fi
+# Summary Row
+
 
 format_output
+
+exit $exit_code
+

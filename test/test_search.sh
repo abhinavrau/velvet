@@ -12,7 +12,7 @@ function test_search_csv() {
   assert_equals 0 $?  "search command returned failure"
 
   # Match to expected results
-  expected="test/data/expected_results/expected_search_success.csv"
+  expected="test/data/expected_results/expected_search_with_prompt.csv"
 
   assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng CSV does not match expected file $expected"
   rm "$TMP_FILE"
@@ -39,7 +39,7 @@ function test_search_json() {
   assert_equals 0 "$success" "Output is not valid JSON"
 
   # Match to expected results
-  expected="test/data/expected_results/expected_search_success.jsonl"
+  expected="test/data/expected_results/expected_search_with_prompt.jsonl"
 
   assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng JSONL does not match expected file $expected"
   rm "$TMP_FILE"
