@@ -60,13 +60,8 @@ for ((i = 0; i < ${#ids[@]}; i++)); do
     expected_link_2="${expected_document_links_2[$i]}"
     expected_link_1=$(echo "$expected_link_1" | xargs)
     expected_link_2=$(echo "$expected_link_2" | xargs)
-    command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${queries[$i]}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 3}} }') 
-    error=$(echo "$command_output" | jq '.error.code' )
-    if [ "$error" = '401' ]; then
-        echo "Authentication failed."
-        exit 1
-    fi
-    
+    query=${queries[$i]}
+    call_vertex_ai_search
     summary_to_match=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
     actual_link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' | xargs)
     actual_link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' | xargs) 

@@ -15,6 +15,7 @@ while IFS= read -r line
         continue;
     else
         command_output=""
+        query=$line
         call_vertex_ai_search
         summary=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
         link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' )
