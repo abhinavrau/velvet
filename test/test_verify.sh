@@ -72,3 +72,54 @@ function test_verify_failure() {
 
   rm "$TMP_FILE"
 }
+
+function test_verify_csv_with_threshold() {
+
+  cd "${PROJECT_DIR}" || exit
+  TMP_FILE=$(mktemp)
+
+  result=$("${SRC}"/"${SCRIPT_NAME}" verify test/data/verify_test_no_prompt.csv -f=csv -m=0.8 -s=0.8 > "$TMP_FILE")
+
+  assert_equals 0 $? "verify command returned failure"
+
+  # Match to expected results
+  expected="test/data/expected_results/expected_verify_with_threshold.csv"
+
+  assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng CSV does not match expected file $expected"
+
+  rm "$TMP_FILE"
+}
+
+function test_verify_csv_with_threshold() {
+
+  cd "${PROJECT_DIR}" || exit
+  TMP_FILE=$(mktemp)
+
+  result=$("${SRC}"/"${SCRIPT_NAME}" verify test/data/verify_test_with_prompt.csv -f=csv -m=0.8 -s=0.8 > "$TMP_FILE")
+
+  assert_equals 0 $? "verify command returned failure"
+
+  # Match to expected results
+  expected="test/data/expected_results/expected_verify_with_threshold.csv"
+
+  assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng CSV does not match expected file $expected"
+
+  rm "$TMP_FILE"
+}
+
+function test_verify_csv_with_threshold() {
+
+  cd "${PROJECT_DIR}" || exit
+  TMP_FILE=$(mktemp)
+
+  result=$("${SRC}"/"${SCRIPT_NAME}" verify test/data/verify_test_no_prompt.csv -f=csv -m=0.8 -s=0.8 > "$TMP_FILE")
+
+  assert_equals 1 $? "verify command returned success. Should fails since threshold is 0.8"
+
+  # Match to expected results
+  expected="test/data/expected_results/expected_verify_with_threshold_failure.csv"
+
+  assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng CSV does not match expected file $expected"
+
+  rm "$TMP_FILE"
+}

@@ -239,7 +239,7 @@ vlvt_verify_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--mrr-threshold, -t MRR-THRESHOLD")"
+    printf "  %s\n" "$(magenta "--mrr-threshold, -m MRR-THRESHOLD")"
     printf "    Mean Reciprocal Rank (MRR) threshold to be above. If specified it will fail\n    if MRR is below this threshold.\n"
     echo
 
@@ -1251,7 +1251,7 @@ vlvt_verify_parse_requirements() {
         ;;
 
       # :flag.case
-      --mrr-threshold | -t)
+      --mrr-threshold | -m)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -1260,7 +1260,7 @@ vlvt_verify_parse_requirements() {
           shift
           shift
         else
-          printf "%s\n" "--mrr-threshold requires an argument: --mrr-threshold, -t MRR-THRESHOLD" >&2
+          printf "%s\n" "--mrr-threshold requires an argument: --mrr-threshold, -m MRR-THRESHOLD" >&2
           exit 1
         fi
         ;;

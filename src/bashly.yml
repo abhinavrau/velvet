@@ -88,7 +88,7 @@ commands:
   flags:
   - *format
   - long: --mrr-threshold
-    short: -t
+    short: -m
     arg: mrr-threshold
     help: Mean Reciprocal Rank (MRR) threshold to be above. If specified it will fail if MRR is below this threshold.
   - long: --summary-threshold
