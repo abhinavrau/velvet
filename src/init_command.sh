@@ -3,7 +3,7 @@ if [ -f "jtbl" ]; then
 else
   
   os=$(uname -s)
-  arch=-$(uname -m)
+  arch=$(uname -m)
 
   # For macOS stick to x86 since no arm build yet.
   if [ "$arch" == "Darwin" ]; then
@@ -11,10 +11,9 @@ else
   fi
 
   # Determine the platform.
-  platform=$os-$arch
+  platform="$os"-"$arch"
   # to lower case
   platform_lower=${platform,,}  
-  
   
    # Destination file to save the downloaded content
   file_path=jtbl-1.5.2-"${platform_lower}".tar.gz

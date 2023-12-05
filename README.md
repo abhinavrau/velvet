@@ -29,24 +29,26 @@ $ bash --version
 ```
 To upgrade follow direction [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba)
 
-2. Setup [gcloud](https://cloud.google.com/sdk/docs/install-sdk) cli and authenticate to make sure you have access to the project with ES you want to query
+1. Setup [gcloud](https://cloud.google.com/sdk/docs/install-sdk) cli and authenticate to make sure you have access to the project with ES you want to query
 
-3. Install dependent tools. This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) curently
+2. Create Vertex AI search app. See [here](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to create one with all the Alphabet earnings reports pdfs. 
+
+3. Export the following env variables.
+
+```bash
+$ export GCP_PROJECT_NUMBER=<vertex-ai-search-gcp-project-number> 
+$ export DATASTORE_NAME=<vertex-ai-search-search_datastore_name> 
+$ export PROJECT_ID=<palm-text-bison-project-id> # used by verify command to match summaries 
+$ export LOCATION_ID=<palm-text-bison-region-name> # used by verify command to match summaries 
+```
+3. Install dependent tools. This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) and verifies gcloud auth.
 
 ```bash
 $ ./vlvt init
 ```
 
-1. Make sure you export the following env variables.
-
-```bash
-$ export GCP_PROJECT_NUMBER=<vertex-ai-search-gcp-project-number> 
-$ export DATASTORE_NAME=<vertex-ai-search-search_datastore_name> 
-$ export PROJECT_ID=<palm-text-bison-project-id> # used for matching summaries
-$ export LOCATION_ID=<palm-text-bison-region-name>
-```
-
 ## Examples
+
 Single search with csv output. Only shows the summary and first document link
 ```bash
     $ ./vlvt search "What is Google's revenue for year ending 2022?" 

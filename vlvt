@@ -72,7 +72,7 @@ vlvt_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples:")"
-    printf "  Single search with csv output. Only shows the summary and first document link\n  $ ./ges-tool search \"What is Google's revenue for year ending 2022?\" \n  \n  Single search with table output. Only shows the summary and first document\n  link\n  $ ./ges-tool s \"What is Google's revenue for year ending 2022?\" --format=table\n  \n   Single search with raw json output\n  $ ./ges-tool s \"What is Google's revenue for year ending 2022?\" -f=json \n  \n  Batch search with input file containing search queries and output a csv file\n  with results. Only shows the summary and first document link\n  $ ./ges-tool bsearch test/data/batch_test.txt --format=table \n  \n  Batch search AND verify with input file containing search queries and output a\n  csv file with results.\n  $ ./ges-tool verify test/data/verification_test_with_prompt.csv --format=csv\n"
+    printf "  Single search with csv output. Only shows the summary and first document link\n  $ ./vlvt search \"What is Google's revenue for year ending 2022?\" \n  \n  Single search with table output. Only shows the summary and first document\n  link\n  $ ./vlvt s \"What is Google's revenue for year ending 2022?\" --format=table \n  \n   Single search with raw json output\n  $ ./vlvt s \"What is Google's revenue for year ending 2022?\" -f=json \n  \n  Batch search with input file containing search queries and output a csv file\n  with results. Only shows the summary and first document link\n  $ ./vlvt bsearch test/data/batch_test.txt --format=table \n  \n  Batch search AND verify with input file containing search queries and output a\n  csv file with results.\n  $ ./vlvt verify test/data/verification_test_with_prompt.csv --format=csv\n"
     echo
 
   fi
@@ -442,8 +442,17 @@ vlvt_init_command() {
   if [ -f "jtbl" ]; then
     echo "The jbtl tool is already installed."
   else
+
+    os=$(uname -s)
+    arch=$(uname -m)
+
+    # For macOS stick to x86 since no arm build yet.
+    if [ "$arch" == "Darwin" ]; then
+        arch="x86_64"
+    fi
+
     # Determine the platform.
-    platform=$(uname -s)-$(uname -m)
+    platform="$os"-"$arch"
     # to lower case
     platform_lower=${platform,,}
 
@@ -583,8 +592,12 @@ vlvt_verify_command() {
   done < <(tail -n +2 "$input_file")
 
   output=""
+  summary_correct_count=0
+  link_1_correct_count=0
+  link_2_correct_count=0
+  total_documents=${#ids[@]}
   # Loop through the entries and call vertex ai search and then call palm bison to match the summaries
-  for ((i = 0; i < ${#ids[@]}; i++)); do
+  for ((i = 0; i < total_documents; i++)); do
     #echo "ID: ${ids[$i]}, query: ${queries[$i]}, expected_summary: ${expected_summaries[$i]}, expected_document_link: ${expected_document_links[$i]}"
     # Skip line with empty id field
     if [ -z "${ids[$i]}" ]; then
@@ -601,10 +614,18 @@ vlvt_verify_command() {
 
       if [ "$link_1" == "${expected_link_1}" ]; then
           link_1_match="matched"
+          p0_precision=1.0
       else
 
           link_1_match="not_matched"
+          p0_precision=0.0
       fi
+
+      if [[ "$link_1" == "${expected_link_1}" || "$link_1" == "${expected_link_2}" ]]; then
+          link_1_correct_count=$((link_1_correct_count + 1))
+      fi
+
+      p1_precision=$(echo "scale=4; $link_1_correct_count / ($i+1) " | bc)
 
       if [ "$link_2" == "${expected_link_2}" ]; then
           link_2_match="matched"
@@ -613,11 +634,27 @@ vlvt_verify_command() {
           link_2_match="not_matched"
       fi
 
+      if [[ "$link_2" == "${expected_link_1}" || "$link_2" == "${expected_link_2}" ]]; then
+          link_2_correct_count=$((link_2_correct_count + 1))
+      fi
+
+      p2_precision=$(echo "scale=4; $link_2_correct_count / ($i+1) " | bc)
+
       expected_summary=${expected_summaries[$i]}
       # Verify the summary by calling text-bison
       call_palm_text_bison
 
-      output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\"}"$'\n'
+      # Calculate precision
+
+      if [ "$summary_match" == "same" ];then
+
+        summary_correct_count=$((summary_correct_count + 1))
+      fi
+
+      summary_precision=$(echo "scale=4; $summary_correct_count / ($i+1) " | bc)
+
+      # Create JSONL output
+      output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\", \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
 
     fi
   done
