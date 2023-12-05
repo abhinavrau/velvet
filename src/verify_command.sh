@@ -48,7 +48,7 @@ done < <(tail -n +2 "$input_file")
 
 
 output=""
-# Display or process the arrays 
+# Loop through the entries and call vertex ai search and then call palm bison to match the summaries
 for ((i = 0; i < ${#ids[@]}; i++)); do
   #echo "ID: ${ids[$i]}, query: ${queries[$i]}, expected_summary: ${expected_summaries[$i]}, expected_document_link: ${expected_document_links[$i]}"
   # Skip line with empty id field
@@ -60,19 +60,17 @@ for ((i = 0; i < ${#ids[@]}; i++)); do
     expected_link_2="${expected_document_links_2[$i]}"
     expected_link_1=$(echo "$expected_link_1" | xargs)
     expected_link_2=$(echo "$expected_link_2" | xargs)
+    
     query=${queries[$i]}
     call_vertex_ai_search
-    summary_to_match=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
-    actual_link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' | xargs)
-    actual_link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' | xargs) 
 
-    if [ "$actual_link_1" == "${expected_link_1}" ]; then
+    if [ "$link_1" == "${expected_link_1}" ]; then
         link_1_match="matched"
     else 
         link_1_match="not_matched"
     fi
 
-    if [ "$actual_link_2" == "${expected_link_2}" ]; then
+    if [ "$link_2" == "${expected_link_2}" ]; then
         link_2_match="matched"
     else 
         link_2_match="not_matched"
@@ -80,41 +78,9 @@ for ((i = 0; i < ${#ids[@]}; i++)); do
 
     expected_summary=${expected_summaries[$i]}
     # Verify the summary by calling text-bison
-    prompt="You will get two answers to a question, you should determine if they are semantically similar or not. 
-    examples - answer_1: I was created by X. answer_2: X created me. output:same 
-    answer_1:There are 52 days in a year. answer_2: A year is fairly long. output:different"
-    full_payload=$prompt" Now answer answer_1: $summary_to_match,
-        answer_2: $expected_summary
-        output:"
+    call_palm_text_bison
 
-    jsonPayload="   
-    {
-            \"instances\": [
-                {
-                    \"content\": \"${full_payload}\"
-                }
-            ],
-            \"parameters\": {
-                \"candidateCount\": 1,
-                \"maxOutputTokens\": 1024,
-                \"temperature\": 0.2
-            }
-    }"
-    #echo "$jsonPayload"
-    
-    API_ENDPOINT="${LOCATION_ID}-aiplatform.googleapis.com"
-    MODEL_ID="text-bison"
-
-    match_result=$(curl \
-    -s \
-    -X POST \
-    -H "Authorization: Bearer $token" \
-    -H "Content-Type: application/json" \
-    "https://${API_ENDPOINT}/v1/projects/${PROJECT_ID}/locations/${LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
-
-    summary_match=$(echo "$match_result" | jq '.predictions[0].content' | sed 's/"//g')
-
-    output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary_to_match\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$actual_link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$actual_link_2\"  ,\"link_2_match\": \"$link_2_match\"}"$'\n'
+    output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\"}"$'\n'
           
       
   fi

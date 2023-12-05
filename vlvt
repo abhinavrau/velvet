@@ -16,21 +16,21 @@ version_command() {
 }
 
 # :command.usage
-ges_tool_usage() {
+vlvt_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool - CLI for GCP GenAI App Builder Enterprise Search.\n"
+    printf "vlvt - Velvet - Vertex AI Search verfication tool\n"
     echo
 
   else
-    printf "ges-tool - CLI for GCP GenAI App Builder Enterprise Search.\n"
+    printf "vlvt - Velvet - Vertex AI Search verfication tool\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ges-tool COMMAND\n"
-  printf "  ges-tool [COMMAND] --help | -h\n"
-  printf "  ges-tool --version | -v\n"
+  printf "  vlvt COMMAND\n"
+  printf "  vlvt [COMMAND] --help | -h\n"
+  printf "  vlvt --version | -v\n"
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Commands:")"
@@ -79,13 +79,13 @@ ges_tool_usage() {
 }
 
 # :command.usage
-ges_tool_init_usage() {
+vlvt_init_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool init - Checks for gcloud authentication and installs dependent tools\n"
+    printf "vlvt init - Checks for gcloud authentication and installs dependent tools\n"
     echo
 
   else
-    printf "ges-tool init - Checks for gcloud authentication and installs dependent tools\n"
+    printf "vlvt init - Checks for gcloud authentication and installs dependent tools\n"
     echo
 
   fi
@@ -94,8 +94,8 @@ ges_tool_init_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ges-tool init\n"
-  printf "  ges-tool init --help | -h\n"
+  printf "  vlvt init\n"
+  printf "  vlvt init --help | -h\n"
   echo
 
   # :command.long_usage
@@ -111,13 +111,13 @@ ges_tool_init_usage() {
 }
 
 # :command.usage
-ges_tool_search_usage() {
+vlvt_search_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool search - Perform a single search query and outputs results as csv\n"
+    printf "vlvt search - Perform a single search query and outputs results as csv\n"
     echo
 
   else
-    printf "ges-tool search - Perform a single search query and outputs results as csv\n"
+    printf "vlvt search - Perform a single search query and outputs results as csv\n"
     echo
 
   fi
@@ -126,8 +126,8 @@ ges_tool_search_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ges-tool search QUERY [OPTIONS]\n"
-  printf "  ges-tool search --help | -h\n"
+  printf "  vlvt search QUERY [OPTIONS]\n"
+  printf "  vlvt search --help | -h\n"
   echo
 
   # :command.long_usage
@@ -159,13 +159,13 @@ ges_tool_search_usage() {
 }
 
 # :command.usage
-ges_tool_bsearch_usage() {
+vlvt_bsearch_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool bsearch - Perform a batch search using queries from an external file\n"
+    printf "vlvt bsearch - Perform a batch search using queries from an external file\n"
     echo
 
   else
-    printf "ges-tool bsearch - Perform a batch search using queries from an external file\n"
+    printf "vlvt bsearch - Perform a batch search using queries from an external file\n"
     echo
 
   fi
@@ -174,8 +174,8 @@ ges_tool_bsearch_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ges-tool bsearch INPUT_FILE [OPTIONS]\n"
-  printf "  ges-tool bsearch --help | -h\n"
+  printf "  vlvt bsearch INPUT_FILE [OPTIONS]\n"
+  printf "  vlvt bsearch --help | -h\n"
   echo
 
   # :command.long_usage
@@ -207,13 +207,13 @@ ges_tool_bsearch_usage() {
 }
 
 # :command.usage
-ges_tool_verify_usage() {
+vlvt_verify_usage() {
   if [[ -n $long_usage ]]; then
-    printf "ges-tool verify - Perform a batch search and verify using an input csv file that outputs to JSON lines.\n"
+    printf "vlvt verify - Perform a batch search and verify using an input csv file that outputs to JSON lines.\n"
     echo
 
   else
-    printf "ges-tool verify - Perform a batch search and verify using an input csv file that outputs to JSON lines.\n"
+    printf "vlvt verify - Perform a batch search and verify using an input csv file that outputs to JSON lines.\n"
     echo
 
   fi
@@ -222,8 +222,8 @@ ges_tool_verify_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ges-tool verify INPUT_FILE [OPTIONS]\n"
-  printf "  ges-tool verify --help | -h\n"
+  printf "  vlvt verify INPUT_FILE [OPTIONS]\n"
+  printf "  vlvt verify --help | -h\n"
   echo
 
   # :command.long_usage
@@ -320,6 +320,54 @@ inspect_args() {
 }
 
 # :command.user_lib
+# src/lib/call_palm_text_bison.sh
+# shellcheck disable=SC2148
+call_palm_text_bison() {
+
+    prompt="You will get two answers to a question, you should determine if they are semantically similar or not.
+
+    examples - answer_1: I was created by X. answer_2: X created me. output:same
+
+    answer_1:There are 52 days in a year. answer_2: A year is fairly long. output:different"
+    full_payload=$prompt" Now answer answer_1: $summary,
+        answer_2: $expected_summary
+        output:"
+
+    jsonPayload="
+
+    {
+            \"instances\": [
+                {
+                    \"content\": \"${full_payload}\"
+                }
+            ],
+            \"parameters\": {
+                \"candidateCount\": 1,
+                \"maxOutputTokens\": 1024,
+                \"temperature\": 0.2
+            }
+    }"
+    #echo "$jsonPayload"
+
+    API_ENDPOINT="${LOCATION_ID}-aiplatform.googleapis.com"
+    MODEL_ID="text-bison"
+
+    match_result=$(curl \
+    -s \
+    -X POST \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    "https://${API_ENDPOINT}/v1/projects/${PROJECT_ID}/locations/${LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
+    error=$(echo "$match_result" | jq '.error.code' )
+    if [ -z "$error" ]; then
+        error_message=$(echo "$match_result" | jq '.error.message' )
+        echo "Calling Vertex AI search failed. ErrorCode:$error ErrorMessage:$error_message"
+        exit 1
+    fi
+
+    summary_match=$(echo "$match_result" | jq '.predictions[0].content' | sed 's/"//g' | xargs)
+}
+
 # src/lib/call_vertex_ai_search.sh
 # shellcheck disable=SC2148
 call_vertex_ai_search() {
@@ -327,11 +375,16 @@ call_vertex_ai_search() {
     command_output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${query}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 2}, "summarySpec":{"summaryResultCount": 3}} }')
 
     error=$(echo "$command_output" | jq '.error.code' )
-    if [ "$error" = '401' ]; then
+    if [ -z "$error" ]; then
         error_message=$(echo "$command_output" | jq '.error.message' )
-        echo "Authentication failed. ErrorCode:$error ErrorMessage:$error_message"
+        echo "Calling Vertex AI search failed. ErrorCode:$error ErrorMessage:$error_message"
         exit 1
     fi
+    summary=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
+    link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' | xargs)
+    link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' | xargs)
+
+    link_3=$(echo "$command_output" | jq '.results[2].document.derivedStructData.link' | sed 's/"//g' | xargs)
 
 }
 
@@ -384,14 +437,14 @@ format_output() {
 
 # :command.command_functions
 # :command.function
-ges_tool_init_command() {
+vlvt_init_command() {
   # src/init_command.sh
   if [ -f "jtbl" ]; then
     echo "The jbtl tool is already installed."
   else
     # Determine the platform.
     platform=$(uname -s)-$(uname -m)
-    # to upper case
+    # to lower case
     platform_lower=${platform,,}
 
      # Destination file to save the downloaded content
@@ -400,7 +453,7 @@ ges_tool_init_command() {
     url=https://github.com/kellyjonbrazil/jtbl/releases/download/v1.5.2/jtbl-1.5.2-"${platform_lower}".tar.gz
 
     # Use curl to download the file
-    response_code=$(curl -LO "$url" -w "%{http_code}")
+    response_code=$(curl -s -LO "$url" -w "%{http_code}")
 
     # Check the HTTP status code
     if [ "$response_code" -eq 200 ]; then
@@ -424,7 +477,7 @@ ges_tool_init_command() {
 }
 
 # :command.function
-ges_tool_search_command() {
+vlvt_search_command() {
   # src/search_command.sh
   querystring=${args[query]}
   format=${args[--format]}
@@ -437,39 +490,17 @@ ges_tool_search_command() {
       token=$(gcloud auth print-access-token)
   fi
 
-  flag=''
+  command_output=""
+  query=$querystring
+  call_vertex_ai_search
 
-  if [[ $minimal ]]; then
-      output=$(curl -s  -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }')
-      use_jtbl=1
-  elif  [[ $csv ]]; then
-      output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5}} }')
-      flag='-c'
-      use_jtbl=1
-  else
-      output=$(curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/json" "https://discoveryengine.googleapis.com/v1alpha/projects/${GCP_PROJECT_NUMBER}/locations/global/collections/default_collection/dataStores/${DATASTORE_NAME}/servingConfigs/default_search:search" -d '{ "query": "'"${querystring}"'", "page_size": "5", "offset": 0 , "contentSearchSpec": { "snippetSpec":{"maxSnippetCount": 3}, "summarySpec":{"summaryResultCount": 5} } }')
-  fi
-
-  if [[ $output ]]; then
-      error=$(echo "$output" | jq '.error.code' )
-      if [ "$error" = '401' ]; then
-          echo "Authentication failed with credentials in GCP_ACCESS_TOKEN"
-          exit 1
-      else
-          if [[ $use_jtbl ]]; then
-
-              echo "$output" | jq  '[{summary: .summary.summaryText, link: .results[0].document.derivedStructData.link}]' | ./jtbl $flag
-          else
-              echo "$output"
-
-          fi
-      fi
-  fi
+  output+="{\"summary\": \"$summary\", \"link_1\": \"$link_1\", \"link_2\": \"$link_2\", \"link_3\": \"$link_3\"}"$'\n'
+  format_output
 
 }
 
 # :command.function
-ges_tool_bsearch_command() {
+vlvt_bsearch_command() {
   # src/bsearch_command.sh
   format=${args[--format]}
   input_file=${args[input_file]}
@@ -486,14 +517,9 @@ ges_tool_bsearch_command() {
       if [ -z "$line" ]; then
           continue;
       else
-          command_output=""
+
           query=$line
           call_vertex_ai_search
-          summary=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
-          link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' )
-          link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' )
-
-          link_3=$(echo "$command_output" | jq '.results[2].document.derivedStructData.link' | sed 's/"//g' )
 
           output+="{\"summary\": \"$summary\", \"link_1\": \"$link_1\", \"link_2\": \"$link_2\", \"link_3\": \"$link_3\"}"$'\n'
 
@@ -505,7 +531,7 @@ ges_tool_bsearch_command() {
 }
 
 # :command.function
-ges_tool_verify_command() {
+vlvt_verify_command() {
   # src/verify_command.sh
   #inspect_args
   input_file=${args[input_file]}
@@ -557,8 +583,7 @@ ges_tool_verify_command() {
   done < <(tail -n +2 "$input_file")
 
   output=""
-  # Display or process the arrays
-
+  # Loop through the entries and call vertex ai search and then call palm bison to match the summaries
   for ((i = 0; i < ${#ids[@]}; i++)); do
     #echo "ID: ${ids[$i]}, query: ${queries[$i]}, expected_summary: ${expected_summaries[$i]}, expected_document_link: ${expected_document_links[$i]}"
     # Skip line with empty id field
@@ -570,20 +595,18 @@ ges_tool_verify_command() {
       expected_link_2="${expected_document_links_2[$i]}"
       expected_link_1=$(echo "$expected_link_1" | xargs)
       expected_link_2=$(echo "$expected_link_2" | xargs)
+
       query=${queries[$i]}
       call_vertex_ai_search
-      summary_to_match=$(echo "$command_output" | jq '.summary.summaryText' | sed 's/"//g')
-      actual_link_1=$(echo "$command_output" | jq '.results[0].document.derivedStructData.link' | sed 's/"//g' | xargs)
-      actual_link_2=$(echo "$command_output" | jq '.results[1].document.derivedStructData.link' | sed 's/"//g' | xargs)
 
-      if [ "$actual_link_1" == "${expected_link_1}" ]; then
+      if [ "$link_1" == "${expected_link_1}" ]; then
           link_1_match="matched"
       else
 
           link_1_match="not_matched"
       fi
 
-      if [ "$actual_link_2" == "${expected_link_2}" ]; then
+      if [ "$link_2" == "${expected_link_2}" ]; then
           link_2_match="matched"
       else
 
@@ -592,44 +615,9 @@ ges_tool_verify_command() {
 
       expected_summary=${expected_summaries[$i]}
       # Verify the summary by calling text-bison
-      prompt="You will get two answers to a question, you should determine if they are semantically similar or not.
+      call_palm_text_bison
 
-      examples - answer_1: I was created by X. answer_2: X created me. output:same
-
-      answer_1:There are 52 days in a year. answer_2: A year is fairly long. output:different"
-      full_payload=$prompt" Now answer answer_1: $summary_to_match,
-          answer_2: $expected_summary
-          output:"
-
-      jsonPayload="
-
-      {
-              \"instances\": [
-                  {
-                      \"content\": \"${full_payload}\"
-                  }
-              ],
-              \"parameters\": {
-                  \"candidateCount\": 1,
-                  \"maxOutputTokens\": 1024,
-                  \"temperature\": 0.2
-              }
-      }"
-      #echo "$jsonPayload"
-
-      API_ENDPOINT="${LOCATION_ID}-aiplatform.googleapis.com"
-      MODEL_ID="text-bison"
-
-      match_result=$(curl \
-      -s \
-      -X POST \
-      -H "Authorization: Bearer $token" \
-      -H "Content-Type: application/json" \
-      "https://${API_ENDPOINT}/v1/projects/${PROJECT_ID}/locations/${LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
-
-      summary_match=$(echo "$match_result" | jq '.predictions[0].content' | sed 's/"//g')
-
-      output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary_to_match\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$actual_link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$actual_link_2\"  ,\"link_2_match\": \"$link_2_match\"}"$'\n'
+      output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\"}"$'\n'
 
     fi
   done
@@ -650,7 +638,7 @@ parse_requirements() {
 
       --help | -h)
         long_usage=yes
-        ges_tool_usage
+        vlvt_usage
         exit
         ;;
 
@@ -681,34 +669,34 @@ parse_requirements() {
     init | i)
       action="init"
       shift
-      ges_tool_init_parse_requirements "$@"
+      vlvt_init_parse_requirements "$@"
       shift $#
       ;;
 
     search | s)
       action="search"
       shift
-      ges_tool_search_parse_requirements "$@"
+      vlvt_search_parse_requirements "$@"
       shift $#
       ;;
 
     bsearch | b)
       action="bsearch"
       shift
-      ges_tool_bsearch_parse_requirements "$@"
+      vlvt_bsearch_parse_requirements "$@"
       shift $#
       ;;
 
     verify | v)
       action="verify"
       shift
-      ges_tool_verify_parse_requirements "$@"
+      vlvt_verify_parse_requirements "$@"
       shift $#
       ;;
 
     # :command.command_fallback
     "")
-      ges_tool_usage >&2
+      vlvt_usage >&2
       exit 1
       ;;
 
@@ -743,13 +731,13 @@ parse_requirements() {
 }
 
 # :command.parse_requirements
-ges_tool_init_parse_requirements() {
+vlvt_init_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        ges_tool_init_usage
+        vlvt_init_usage
         exit
         ;;
 
@@ -802,13 +790,13 @@ ges_tool_init_parse_requirements() {
 }
 
 # :command.parse_requirements
-ges_tool_search_parse_requirements() {
+vlvt_search_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        ges_tool_search_usage
+        vlvt_search_usage
         exit
         ;;
 
@@ -865,7 +853,7 @@ ges_tool_search_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['query']+x} ]]; then
-    printf "missing required argument: QUERY\nusage: ges-tool search QUERY [OPTIONS]\n" >&2
+    printf "missing required argument: QUERY\nusage: vlvt search QUERY [OPTIONS]\n" >&2
     exit 1
   fi
 
@@ -881,13 +869,13 @@ ges_tool_search_parse_requirements() {
 }
 
 # :command.parse_requirements
-ges_tool_bsearch_parse_requirements() {
+vlvt_bsearch_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        ges_tool_bsearch_usage
+        vlvt_bsearch_usage
         exit
         ;;
 
@@ -944,7 +932,7 @@ ges_tool_bsearch_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['input_file']+x} ]]; then
-    printf "missing required argument: INPUT_FILE\nusage: ges-tool bsearch INPUT_FILE [OPTIONS]\n" >&2
+    printf "missing required argument: INPUT_FILE\nusage: vlvt bsearch INPUT_FILE [OPTIONS]\n" >&2
     exit 1
   fi
 
@@ -960,13 +948,13 @@ ges_tool_bsearch_parse_requirements() {
 }
 
 # :command.parse_requirements
-ges_tool_verify_parse_requirements() {
+vlvt_verify_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        ges_tool_verify_usage
+        vlvt_verify_usage
         exit
         ;;
 
@@ -1034,7 +1022,7 @@ ges_tool_verify_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['input_file']+x} ]]; then
-    printf "missing required argument: INPUT_FILE\nusage: ges-tool verify INPUT_FILE [OPTIONS]\n" >&2
+    printf "missing required argument: INPUT_FILE\nusage: vlvt verify INPUT_FILE [OPTIONS]\n" >&2
     exit 1
   fi
 
@@ -1067,10 +1055,10 @@ run() {
   parse_requirements "${input[@]}"
 
   case "$action" in
-    "init") ges_tool_init_command ;;
-    "search") ges_tool_search_command ;;
-    "bsearch") ges_tool_bsearch_command ;;
-    "verify") ges_tool_verify_command ;;
+    "init") vlvt_init_command ;;
+    "search") vlvt_search_command ;;
+    "bsearch") vlvt_bsearch_command ;;
+    "verify") vlvt_verify_command ;;
   esac
 }
 

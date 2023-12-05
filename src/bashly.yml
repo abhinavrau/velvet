@@ -1,5 +1,5 @@
-name: ges-tool
-help: CLI for GCP GenAI App Builder Enterprise Search.  
+name: vlvt
+help: Velvet - Vertex AI Search verfication tool
 version: 0.1.0
 
 environment_variables:
@@ -75,16 +75,16 @@ commands:
   
 examples: |-
     Single search with csv output. Only shows the summary and first document link
-    $ ./ges-tool search "What is Google's revenue for year ending 2022?" 
+    $ ./vlvt search "What is Google's revenue for year ending 2022?" 
 
     Single search with table output. Only shows the summary and first document link
-    $ ./ges-tool s "What is Google's revenue for year ending 2022?" --format=table 
+    $ ./vlvt s "What is Google's revenue for year ending 2022?" --format=table 
 
      Single search with raw json output
-    $ ./ges-tool s "What is Google's revenue for year ending 2022?" -f=json 
+    $ ./vlvt s "What is Google's revenue for year ending 2022?" -f=json 
 
     Batch search with input file containing search queries and output a csv file with results. Only shows the summary and first document link
-    $ ./ges-tool bsearch test/data/batch_test.txt --format=table 
+    $ ./vlvt bsearch test/data/batch_test.txt --format=table 
 
     Batch search AND verify with input file containing search queries and output a csv file with results.
-    $ ./ges-tool verify test/data/verification_test_with_prompt.csv --format=csv
+    $ ./vlvt verify test/data/verification_test_with_prompt.csv --format=csv

@@ -1,23 +1,44 @@
 #!/usr/bin/env bash
 
-function test_search_batch() {
+function test_batch_search_csv() {
 
   cd "${PROJECT_DIR}" || exit
 
   TMP_FILE=$(mktemp)
 
-  result=$("${SRC}"/"${SCRIPT_NAME}" batch-search "${TEST}"/data/batch_test.txt > "$TMP_FILE")
+  result=$("${SRC}"/"${SCRIPT_NAME}" bsearch "${TEST}"/data/batch_test_with_prompt.txt -f=csv > "$TMP_FILE")
 
-  assert_equals 0 $?
+  assert_equals 0 $?  "batch search command returned failure"
 
-  # Check if more than 1 line is output 
-  success=1
-  num_lines=$(wc -l "$TMP_FILE" | tr ' ' '\n' | head -1)
-  if [ "$num_lines" -gt 2 ]; then
-    success=0
-  fi
+  # Match to expected results
+  expected="test/data/expected_results/expected_batch_with_prompt.csv"
 
+  assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng CSV does not match expected file $expected"
   rm "$TMP_FILE"
+}
+
+function test_batch_search_json() {
+
+  cd "${PROJECT_DIR}" || exit
+  TMP_FILE=$(mktemp)
   
-  assert_equals 0 "$success"
+  result=$("${SRC}"/"${SCRIPT_NAME}" bsearch "${TEST}"/data/batch_test_with_prompt.txt -f=json > "$TMP_FILE")
+  assert_equals 0 $? "batch search command returned failure"
+
+
+ # Check for valid json
+  if jq -e . < "$TMP_FILE" >/dev/null 2>&1; then
+     # JSON is valid.
+    success=0
+  else 
+    success=1
+  fi
+  assert_equals 0 "$success" "Output is not valid JSON"
+
+  # Match to expected results
+  expected="test/data/expected_results/expected_batch_with_prompt.jsonl"
+
+  assert_no_diff <(cat "$expected") <(cat "$TMP_FILE") "Resultng JSONL does not match expected file $expected"
+  rm "$TMP_FILE"
+
 }

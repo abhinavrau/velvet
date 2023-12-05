@@ -3,7 +3,7 @@ if [ -f "jtbl" ]; then
 else
   # Determine the platform.
   platform=$(uname -s)-$(uname -m)
-  # to upper case
+  # to lower case
   platform_lower=${platform,,}  
 
    # Destination file to save the downloaded content
@@ -12,7 +12,7 @@ else
   url=https://github.com/kellyjonbrazil/jtbl/releases/download/v1.5.2/jtbl-1.5.2-"${platform_lower}".tar.gz
 
   # Use curl to download the file
-  response_code=$(curl -LO "$url" -w "%{http_code}")
+  response_code=$(curl -s -LO "$url" -w "%{http_code}")
 
   # Check the HTTP status code
   if [ "$response_code" -eq 200 ]; then

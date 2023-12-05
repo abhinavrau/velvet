@@ -7,7 +7,7 @@ PROJECT_DIR="$(realpath ".")"
 export PROJECT_DIR
 PATH=$PROJECT_DIR:$PATH 
 export PATH
-SCRIPT_NAME="ges-tool"
+SCRIPT_NAME="vlvt"
 export SCRIPT_NAME
 export SRC="${PROJECT_DIR}"
 export TEST="${PROJECT_DIR}/test"
