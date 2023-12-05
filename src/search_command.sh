@@ -1,7 +1,5 @@
 querystring=${args[query]}
-page_size=${args[page_size]}
-minimal=${args[--minimal]}
-csv=${args[--csv]}
+format=${args[--format]}
 file=${args[--file]}
 
 token=${GCP_ACCESS_TOKEN}

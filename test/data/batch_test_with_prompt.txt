@@ -1,0 +1,2 @@
+You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for year ending 2022?
+You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for Q1 2023 in billions?

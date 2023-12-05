@@ -1,0 +1,6 @@
+usage_colors:
+  caption: bold
+  command: green
+  arg: blue
+  flag: magenta
+  environment_variable: cyan

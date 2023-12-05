@@ -3,12 +3,6 @@ help: CLI for GCP GenAI App Builder Enterprise Search.
 version: 0.1.0
 
 environment_variables:
-- name: project_id
-  required: true
-  help: GCP Project where Palm bison API is enabled and available
-- name: location_id
-  required: true
-  help: GCP Region to use for the Palm bison API is enabled and available
 - name: gcp_project_number
   required: true
   help: Set your GCP Enterprise Search Project Number (not project id)
@@ -24,59 +18,73 @@ commands:
   alias: i
   help: Checks for gcloud authentication and installs dependent tools
 
-- name: usearch
+  dependencies:
+  - curl
+  - jq
+  
+- name: search
   alias: s
-  help: Perform a single unstructured search query
+  help: Perform a single search query and outputs results as csv
 
   args:
   - name: query 
     required: true
     help: search query string
-  - name: page_size 
-    required: false
-    default: "3"
-    help: Number of results to per page. default is 5
   
   flags:
-  - long: --minimal
-    short: -m
-    help: only show the minumum fields
-  - long: --csv
-    short: -c
-    help: output to csv 
- 
+  - &format
+    long: --format
+    short: -f
+    arg: format
+    help: format of output. 
+    allowed: [csv, table, json]
+    default: csv
+    
      
-- name: batch-search
+- name: bsearch
   alias: b
-  help: Perform a batch search using external file that outputs to csv
+  help: Perform a batch search using queries from an external file
 
   args:
   - name: input_file
     required: true
-    help: file name containing queries
-  - name: page_size 
-    required: false
-    default: "5"
-    help: Number of results to per page. default is 5
+    help: Text file name containing queries. One per line. 
 
-- name: batch-verify
+  flags:
+    - *format
+    
+- name: verify
   alias: v
-  help: Perform a batch search and verify using an input csv file that outputs to csv
+  help: Perform a batch search and verify using an input csv file that outputs to JSON lines.
   
+  environment_variables:
+  - name: project_id
+    required: true
+    help: GCP Project where Palm text-bison API is enabled and available
+  - name: location_id
+    required: true
+    help: GCP Region to use for the text-bison API is enabled and available
+
   args:
   - name: input_file
     required: true
     help: csv file containing queries and expected results format is - 
-
+  
+  flags:
+  - *format
+  
 examples: |-
     Single search with csv output. Only shows the summary and first document link
-    $ ./ges-tool s "What is the interest rate?" -c
+    $ ./ges-tool search "What is Google's revenue for year ending 2022?" 
 
     Single search with table output. Only shows the summary and first document link
-    $ ./ges-tool s "What is the interest rate?" -m
+    $ ./ges-tool s "What is Google's revenue for year ending 2022?" --format=table 
 
      Single search with raw json output
-    $ ./ges-tool s "What is the interest rate?" 
+    $ ./ges-tool s "What is Google's revenue for year ending 2022?" -f=json 
 
     Batch search with input file containing search queries and output a csv file with results. Only shows the summary and first document link
-    $ ./ges-tool b search_terms.txt results_file.csv
+    $ ./ges-tool bsearch test/data/batch_test.txt --format=table 
+
+    Batch search AND verify with input file containing search queries and output a csv file with results.
+    $ ./ges-tool verify test/data/verification_test_with_prompt.csv --format=csv
