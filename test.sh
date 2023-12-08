@@ -14,4 +14,4 @@ export SRC="${PROJECT_DIR}"
 export TEST="${PROJECT_DIR}/test"
 export BUILD="${PROJECT_DIR}/build"
 
-test/lib/bash_unit/bash_unit test/test_batch.sh
+test/lib/bash_unit/bash_unit test/test_verify.sh
