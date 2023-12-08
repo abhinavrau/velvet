@@ -57,12 +57,12 @@ vlvt_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "GCP_PROJECT_NUMBER (required)")"
-    printf "    Set your GCP Enterprise Search Project Number (not project id)\n"
+    printf "    Set your GCP Vertex AI Search Project Number (not project id)\n"
     echo
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "DATASTORE_NAME (required)")"
-    printf "    Data Store name of the format <data_store>_<some_number>\"\n"
+    printf "    Vertex AI Search Data Store name of the format <data_store>_<some_number>\"\n"
     echo
 
     # :environment_variable.usage
@@ -72,7 +72,7 @@ vlvt_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples:")"
-    printf "  Single search with csv output. Only shows the summary and first document link\n  $ ./vlvt search \"What is Google's revenue for year ending 2022?\" \n  \n  Single search with table output. Only shows the summary and first document\n  link\n  $ ./vlvt s \"What is Google's revenue for year ending 2022?\" --format=table \n  \n   Single search with raw json output\n  $ ./vlvt s \"What is Google's revenue for year ending 2022?\" -f=json \n  \n  Batch search with input file containing search queries and output a csv file\n  with results. Only shows the summary and first document link\n  $ ./vlvt bsearch test/data/batch_test.txt --format=table \n  \n  Batch search AND verify with input file containing search queries and output a\n  csv file with results.\n  $ ./vlvt verify test/data/verification_test_with_prompt.csv --format=csv\n"
+    printf "  Using the Alphabet financial reports and 10Ks datastore from\n  https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from\n  \n  Single search with table output. \n  $ ./vlvt search \"You are expert financial analyst. Be terse. Answer the\n  question with minimal facts. What is Google's revenue for year ending 2022?\"\n  --format=table\n  \n  Single search with csv output.\n  $ ./vlvt search \"You are expert financial analyst. Be terse. Answer the\n  question with minimal facts. What is Google's revenue for year ending 2022?\"\n  --format=csv\n  \n  Single search with jsonl output\n  $ ./vlvt search \"You are expert financial analyst. Be terse. Answer the\n  question with minimal facts. What is Google's revenue for year ending 2022?\"\n  -f=jsonl\n  \n  Batch search with input file containing search queries and output a csv file\n  with results.\n  $ ./vlvt bsearch test/datatest/data/batch_test_success.txt --f=csv >\n  batch_results.csv\n  \n  Batch search AND verify with input file containing search queries with\n  expected resutls and output results to a csv file.\n  $ ./vlvt verify test/data/verification_test_success.csv --f=csv >\n  verify_results.csv\n"
     echo
 
   fi
@@ -137,8 +137,8 @@ vlvt_search_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--format, -f FORMAT")"
-    printf "    format of output.\n"
-    printf "    Allowed: csv, table, json\n"
+    printf "    format of output. CSV is default if no option is specified\n"
+    printf "    Allowed: csv, table, jsonl\n"
     printf "    Default: csv\n"
     echo
 
@@ -185,8 +185,8 @@ vlvt_bsearch_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--format, -f FORMAT")"
-    printf "    format of output.\n"
-    printf "    Allowed: csv, table, json\n"
+    printf "    format of output. CSV is default if no option is specified\n"
+    printf "    Allowed: csv, table, jsonl\n"
     printf "    Default: csv\n"
     echo
 
@@ -233,8 +233,8 @@ vlvt_verify_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--format, -f FORMAT")"
-    printf "    format of output.\n"
-    printf "    Allowed: csv, table, json\n"
+    printf "    format of output. CSV is default if no option is specified\n"
+    printf "    Allowed: csv, table, jsonl\n"
     printf "    Default: csv\n"
     echo
 
@@ -428,7 +428,7 @@ format_output() {
 
     elif [ "$format" == "csv" ]; then
         echo "$output" | ./jtbl -c
-    elif [ "$format" == "json" ]; then
+    elif [ "$format" == "jsonl" ]; then
         echo "$output"
 
     fi
@@ -898,8 +898,8 @@ vlvt_search_parse_requirements() {
   [[ -n ${args['--format']:-} ]] || args['--format']="csv"
 
   # :command.whitelist_filter
-  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|json)$ ]]; then
-    printf "%s\n" "--format must be one of: csv, table, json" >&2
+  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|jsonl)$ ]]; then
+    printf "%s\n" "--format must be one of: csv, table, jsonl" >&2
     exit 1
   fi
 
@@ -977,8 +977,8 @@ vlvt_bsearch_parse_requirements() {
   [[ -n ${args['--format']:-} ]] || args['--format']="csv"
 
   # :command.whitelist_filter
-  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|json)$ ]]; then
-    printf "%s\n" "--format must be one of: csv, table, json" >&2
+  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|jsonl)$ ]]; then
+    printf "%s\n" "--format must be one of: csv, table, jsonl" >&2
     exit 1
   fi
 
@@ -1067,8 +1067,8 @@ vlvt_verify_parse_requirements() {
   [[ -n ${args['--format']:-} ]] || args['--format']="csv"
 
   # :command.whitelist_filter
-  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|json)$ ]]; then
-    printf "%s\n" "--format must be one of: csv, table, json" >&2
+  if [[ ${args['--format']:-} ]] && [[ ! ${args['--format']:-} =~ ^(csv|table|jsonl)$ ]]; then
+    printf "%s\n" "--format must be one of: csv, table, jsonl" >&2
     exit 1
   fi
 
