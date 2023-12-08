@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function test_init() {
+function test_a_init() {
 
   cd "${PROJECT_DIR}" || exit
   # Remove jtbl if it exists
