@@ -5,10 +5,10 @@ version: 0.1.0
 environment_variables:
 - name: gcp_project_number
   required: true
-  help: Set your GCP Enterprise Search Project Number (not project id)
+  help: Set your GCP Vertex AI Search Project Number (not project id)
 - name: datastore_name
   required: true
-  help: Data Store name of the format <data_store>_<some_number>"
+  help: Vertex AI Search Data Store name of the format <data_store>_<some_number>"
 - name: gcp_access_token
   required: false
   help: Optional - GCP access-token. To be used if access-token is obtained using third party tool like Vault. If this is not set then  `gcloud auth print-access-token` is used to obtain access token. 
@@ -36,8 +36,8 @@ commands:
     long: --format
     short: -f
     arg: format
-    help: format of output. 
-    allowed: [csv, table, json]
+    help: format of output. CSV is default if no option is specified
+    allowed: [csv, table, jsonl]
     default: csv
     
      
@@ -74,17 +74,19 @@ commands:
   - *format
   
 examples: |-
-    Single search with csv output. Only shows the summary and first document link
-    $ ./vlvt search "What is Google's revenue for year ending 2022?" 
+    Using the Alphabet financial reports and 10Ks datastore from https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from
+    
+    Single search with table output. 
+    $ ./vlvt search "You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for year ending 2022?" --format=table 
 
-    Single search with table output. Only shows the summary and first document link
-    $ ./vlvt s "What is Google's revenue for year ending 2022?" --format=table 
+    Single search with csv output.
+    $ ./vlvt search "You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for year ending 2022?" --format=csv
+    
+    Single search with jsonl output
+    $ ./vlvt search "You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for year ending 2022?" -f=jsonl
 
-     Single search with raw json output
-    $ ./vlvt s "What is Google's revenue for year ending 2022?" -f=json 
+    Batch search with input file containing search queries and output a csv file with results.
+    $ ./vlvt bsearch test/datatest/data/batch_test_success.txt --f=csv > batch_results.csv
 
-    Batch search with input file containing search queries and output a csv file with results. Only shows the summary and first document link
-    $ ./vlvt bsearch test/data/batch_test.txt --format=table 
-
-    Batch search AND verify with input file containing search queries and output a csv file with results.
-    $ ./vlvt verify test/data/verification_test_with_prompt.csv --format=csv
+    Batch search AND verify with input file containing search queries with expected resutls and output results to a csv file.
+    $ ./vlvt verify test/data/verification_test_success.csv --f=csv > verify_results.csv

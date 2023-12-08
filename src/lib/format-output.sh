@@ -4,7 +4,7 @@ format_output() {
         echo "$output" | ./jtbl 
     elif [ "$format" == "csv" ]; then
         echo "$output" | ./jtbl -c
-    elif [ "$format" == "json" ]; then
+    elif [ "$format" == "jsonl" ]; then
         echo "$output" 
     fi 
 }
