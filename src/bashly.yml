@@ -3,10 +3,10 @@ help: Velvet - Vertex AI Search verfication tool
 version: 0.1.0
 
 environment_variables:
-- name: gcp_project_number
+- name: vai_search_project_number
   required: true
-  help: Set your GCP Vertex AI Search Project Number (not project id)
-- name: datastore_name
+  help: Set your GCP Vertex AI Search Project Number (NOT project ID) 
+- name: vai_search_datastore_name
   required: true
   help: Vertex AI Search Data Store name of the format <data_store>_<some_number>"
 - name: gcp_access_token
@@ -73,10 +73,10 @@ commands:
   help: Perform a batch search and verify using an input csv file that outputs to JSON lines.
   
   environment_variables:
-  - name: project_id
+  - name: text_bison_project_id
     required: true
     help: GCP Project where Palm text-bison API is enabled and available
-  - name: location_id
+  - name: text_bison_location_id
     required: true
     help: GCP Region to use for the text-bison API is enabled and available
 

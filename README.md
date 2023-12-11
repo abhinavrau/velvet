@@ -14,18 +14,18 @@ The folliwng use the Alphabet annual reports and 10K filings. See [this link](ht
 
 Batch search AND verify with input file [verify_test_success.csv](test/datatest/data/verify_test_success.csv)  containing search queries with expected results and output results to a csv file.
 ```bash
-./vlvt verify test/data/verification_test_success.csv --f=csv > verify_results.csv
+./vlvt verify test/data/verify_test_success.csv --format=csv > verify_results.csv
 ```
 
 Output as table format for humans
 ```bash
-./vlvt verify test/data/verification_test_success.csv --f=table
+./vlvt verify test/data/verify_test_success.csv -f=table
 ```
 ![](images/verify_table.png)
 
 Batch search with input file [batch_test_success.txt](test/datatest/data/batch_test_success.txt) containing search queries and output a table.
 ```bash
-./vlvt bsearch test/datatest/data/batch_test_success.txt --f=csv > batch_results.csv
+./vlvt bsearch test/datatest/data/batch_test_success.txt -f=csv > batch_results.csv
 ```
 
 Single search with table output.
@@ -77,10 +77,10 @@ To upgrade follow direction [here](https://itnext.io/upgrading-bash-on-macos-713
 3. Export the following env variables.
 
 ```bash
-$ export GCP_PROJECT_NUMBER=<vertex-ai-search-gcp-project-number> 
-$ export DATASTORE_NAME=<vertex-ai-search-search_datastore_name> 
-$ export PROJECT_ID=<palm-text-bison-project-id> # used by verify command to match summaries 
-$ export LOCATION_ID=<palm-text-bison-region-name> # used by verify command to match summaries 
+$ export VAI_SEARCH_PROJECT_NUMBER=<vertex-ai-search-gcp-project-number> # Project Number of the Vertex AI Search Engine
+$ export VAI_SEARCH_DATASTORE_NAME=<vertex-ai-search-search_datastore_name>  # Datastore ID of the Vertex AI Search Engine
+$ export TEXT_BISON_PROJECT_ID=<palm-text-bison-project-id> # used by verify command to match summaries 
+$ export TEXT_BISON_LOCATION_ID=<palm-text-bison-region-name> # used by verify command to match summaries 
 ```
 3. Install dependent tools. This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) and verifies gcloud auth.
 

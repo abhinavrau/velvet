@@ -46,13 +46,8 @@ while IFS=',' read -r id query expected_summary expected_document_link_1 expecte
   expected_document_links_2+=("$expected_document_link_2")
 done < <(tail -n +2 "$input_file")
 
-
-
-
 output=""
 summary_correct_count=0
-link_1_correct_count=0
-link_2_correct_count=0
 total_documents=${#ids[@]}
 # Loop through the entries and call vertex ai search and then call palm bison to match the summaries
 for ((i = 0; i < total_documents; i++)); do
@@ -69,32 +64,29 @@ for ((i = 0; i < total_documents; i++)); do
     query=${queries[$i]}
     call_vertex_ai_search
 
+    # Calculate precision p@0 this tells us if the first result is perfect match
     if [ "$link_1" == "${expected_link_1}" ]; then
-        link_1_match="matched"
         p0_precision=1.0
     else 
-        link_1_match="not_matched"
         p0_precision=0.0
     fi
 
-    if [[ "$link_1" == "${expected_link_1}" || "$link_1" == "${expected_link_2}" ]]; then
-        link_1_correct_count=$((link_1_correct_count + 1))
-    fi 
-    p1_precision=$(echo "scale=4; $link_1_correct_count / ($i+1) " | bc)
-    
+    # Calculate precision
+    # p@1
+    precision_1=$(precision_at  "$link_1" "${expected_link_1}" "${expected_link_2}" 1 )
+     # p@2
+    precision_2=$(precision_at  "$link_2" "${expected_link_1}" "${expected_link_2}" 2 ) 
 
-    if [ "$link_2" == "${expected_link_2}" ]; then
-        link_2_match="matched"
-    else 
-        link_2_match="not_matched"
-    fi
+    ## Calculate the MAP (Mean Average Precision) - This tells us which 
+    map=$(echo "scale=4; ($precision_1 + $precision_2) / 2 " | bc)
 
-    if [[ "$link_2" == "${expected_link_1}" || "$link_2" == "${expected_link_2}" ]]; then
-        link_2_correct_count=$((link_2_correct_count + 1))
-    fi 
-    p2_precision=$(echo "scale=4; $link_2_correct_count / ($i+1) " | bc)
-
-
+    ## Calculate the MRR
+    mrr=$(rank_reciprocal_at_2 "${link_1}" "${link_2}" "${expected_link_1}" "${expected_link_2}")
+   
+    # NDCG
+    ndcg=$(calc_ndcg "${link_1}" "${link_2}" "${expected_link_1}" "${expected_link_2}")
+    #echo "$ndcg"
+    # Calculate the 
     expected_summary=${expected_summaries[$i]}
     # Verify the summary by calling text-bison to do a semantic comparison to see if it matches expected summary
     call_palm_text_bison
@@ -107,7 +99,7 @@ for ((i = 0; i < total_documents; i++)); do
 
     # Create JSONL output
     #output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\", \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
-    output+="{\"id\": \"$current_id\", \"question\": \"$query\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" , \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
+    output+="{\"id\": \"$current_id\", \"question\": \"$query\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" , \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"mrr@2\": \"$mrr\",  \"mAP@2\": \"$map\", \"ndcg@2\": \"$ndcg\"}"$'\n'
 
 
       

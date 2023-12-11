@@ -24,7 +24,7 @@ call_palm_text_bison() {
     }"
     #echo "$jsonPayload"
 
-    API_ENDPOINT="${LOCATION_ID}-aiplatform.googleapis.com"
+    API_ENDPOINT="${TEXT_BISON_LOCATION_ID}-aiplatform.googleapis.com"
     MODEL_ID="text-bison"
 
     match_result=$(curl \
@@ -32,7 +32,7 @@ call_palm_text_bison() {
     -X POST \
     -H "Authorization: Bearer $token" \
     -H "Content-Type: application/json" \
-    "https://${API_ENDPOINT}/v1/projects/${PROJECT_ID}/locations/${LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
+    "https://${API_ENDPOINT}/v1/projects/${TEXT_BISON_PROJECT_ID}/locations/${TEXT_BISON_LOCATION_ID}/publishers/google/models/${MODEL_ID}:predict" -d "$jsonPayload")
     error=$(echo "$match_result" | jq '.error.code' )
     if [ -z "$error" ]; then
         error_message=$(echo "$match_result" | jq '.error.message' )
