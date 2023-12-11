@@ -1,12 +1,17 @@
 # Velvet 🔍 ✅ 
 🔮 <u>Ve</u>rtex AI Search <u>Ve</u>rfication <u>T</u>ool
 
+## Why?
+For offline evaluation metric creation for Vertex AI Search
+ 
 ## Features
 - Call [Vertex AI Search](https://cloud.google.com/enterprise-search) API from the command line
-- Output to CSV, JSONL, Table format in terminal for a more human readable format
-- Batch verification for Acceptance testing.
-    - Ouputs Summary precision using by semantically match using PaLM2 text-bison
-    - Outputs precision P@0, P@1, P@2 for document links. 
+- Output to CSV, JSONL
+- Ouput to a human readable table format.
+- Batch verification for Acceptance testing. Produces:
+    - Summary Precision : semantically match using PaLM2 text-bison
+    - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG). 
+- Summary of MMR, mAP, NDCG
 - Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to integrate into CI pipelines.
 
 ## Examples

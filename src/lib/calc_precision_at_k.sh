@@ -1,3 +1,5 @@
+# shellcheck disable=SC2148
+
 function precision_at() {
   local actual_link="$1"
   local expected_link_1="$2"

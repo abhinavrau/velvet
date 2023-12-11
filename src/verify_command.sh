@@ -1,4 +1,5 @@
-#inspect_args
+# shellcheck disable=SC2148
+# shellcheck disable=SC2154
 input_file=${args[input_file]}
 format=${args[--format]}
 token=${GCP_ACCESS_TOKEN}

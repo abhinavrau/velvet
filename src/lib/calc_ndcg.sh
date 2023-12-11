@@ -1,3 +1,4 @@
+# shellcheck disable=SC2148
 function calc_ndcg() {
 
     local link_1
