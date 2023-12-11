@@ -5,7 +5,7 @@ call_palm_text_bison() {
     prompt="You will get two answers to a question, you should determine if they are semantically similar or not. 
     examples - answer_1: I was created by X. answer_2: X created me. output:same 
     answer_1:There are 52 days in a year. answer_2: A year is fairly long. output:different"
-    full_payload=$prompt" Now answer answer_1: $summary,
+    full_payload=$prompt". Now answer answer_1: $summary,
         answer_2: $expected_summary
         output:"
 

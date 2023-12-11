@@ -18,7 +18,7 @@ while IFS= read -r line
         query=$line
         call_vertex_ai_search
 
-        output+="{\"summary\": \"$summary\", \"link_1\": \"$link_1\", \"link_2\": \"$link_2\", \"link_3\": \"$link_3\"}"$'\n'
+        output+="{\"question\": \"$query\", \"summary\": \"$summary\", \"link_1\": \"$link_1\", \"link_2\": \"$link_2\", \"link_3\": \"$link_3\"}"$'\n'
 
     fi
 done < "$input_file"

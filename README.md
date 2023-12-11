@@ -1,16 +1,32 @@
 # Velvet 🔍 ✅ 
-🔮 **V**ertex AI Search **Ve**rfication **T**ool
+🔮 <u>Ve</u>rtex AI Search <u>Ve</u>rfication <u>T</u>ool
 
 ## Features
 - Call [Vertex AI Search](https://cloud.google.com/enterprise-search) API from the command line
 - Output to CSV, JSONL, Table format in terminal for a more human readable format
 - Batch verification for Acceptance testing.
-    - Ouputs Summary precision using Palm2 text-bison 
+    - Ouputs Summary precision using by semantically match using PaLM2 text-bison
     - Outputs precision P@0, P@1, P@2 for document links. 
 - Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to integrate into CI pipelines.
 
 ## Examples
-Examples using the Alphabet annual reports and 10K filings. See [this link](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to set it up.
+The folliwng use the Alphabet annual reports and 10K filings. See [this link](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to set it up.
+
+Batch search AND verify with input file [verify_test_success.csv](test/datatest/data/verify_test_success.csv)  containing search queries with expected results and output results to a csv file.
+```bash
+./vlvt verify test/data/verification_test_success.csv --f=csv > verify_results.csv
+```
+
+Output as table format for humans
+```bash
+./vlvt verify test/data/verification_test_success.csv --f=table
+```
+![](images/verify_table.png)
+
+Batch search with input file [batch_test_success.txt](test/datatest/data/batch_test_success.txt) containing search queries and output a table.
+```bash
+./vlvt bsearch test/datatest/data/batch_test_success.txt --f=csv > batch_results.csv
+```
 
 Single search with table output.
 ```bash
@@ -28,21 +44,6 @@ Single search with jsonl output
 ./vlvt search "You are expert financial analyst. Be terse. Answer the question with minimal facts. What is Google's revenue for year ending 2022?" -f=jsonl > batch_output.jsonl
 
 ```
-Batch search only with input file (batch_test_success.txt)[test/datatest/data/batch_test_success.txt] containing search queries and output a table.
-```bash
-./vlvt bsearch test/datatest/data/batch_test_success.txt --f=csv > batch_results.csv
-```
-Batch search AND verify with input file containing search queries with expected resutls and output results to a csv file.
-```bash
-./vlvt verify test/data/verification_test_success.csv --f=csv > verify_results.csv
-```
-
-Batch search AND verify with input file containing search queries with expected resutls and output results to table in terminal.
-```bash
-./vlvt verify test/data/verification_test_success.csv --f=table
-```
-![](images/verify_table.png)
-
 
 
 ## Install
@@ -88,10 +89,7 @@ $ export LOCATION_ID=<palm-text-bison-region-name> # used by verify command to m
 ```
 
 
-## Usage
-
-
-
+## Full Usage
 
 ## Development
 

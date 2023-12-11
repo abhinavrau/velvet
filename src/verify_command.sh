@@ -56,7 +56,6 @@ link_2_correct_count=0
 total_documents=${#ids[@]}
 # Loop through the entries and call vertex ai search and then call palm bison to match the summaries
 for ((i = 0; i < total_documents; i++)); do
-  #echo "ID: ${ids[$i]}, query: ${queries[$i]}, expected_summary: ${expected_summaries[$i]}, expected_document_link: ${expected_document_links[$i]}"
   # Skip line with empty id field
   if [ -z "${ids[$i]}" ]; then
       continue;
@@ -97,11 +96,10 @@ for ((i = 0; i < total_documents; i++)); do
 
 
     expected_summary=${expected_summaries[$i]}
-    # Verify the summary by calling text-bison
+    # Verify the summary by calling text-bison to do a semantic comparison to see if it matches expected summary
     call_palm_text_bison
 
     # Calculate precision
-    
     if [ "$summary_match" == "same" ];then 
       summary_correct_count=$((summary_correct_count + 1))
     fi 
@@ -109,7 +107,7 @@ for ((i = 0; i < total_documents; i++)); do
 
     # Create JSONL output
     #output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\", \"summary_match\": \"$summary_match\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"link_1_match\": \"$link_1_match\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\"  ,\"link_2_match\": \"$link_2_match\", \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
-    output+="{\"id\": \"$current_id\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" , \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
+    output+="{\"id\": \"$current_id\", \"question\": \"$query\", \"actual_summary\": \"$summary\", \"expected_summary\": \"$expected_summary\" , \"expected_link_1\": \"$expected_link_1\"  ,  \"actual_link_1\": \"$link_1\", \"expected_link_2\": \"$expected_link_2\" ,  \"actual_link_2\": \"$link_2\" , \"summary_p\": \"$summary_precision\" ,  \"@p0\": \"$p0_precision\", \"@p1\": \"$p1_precision\", \"@p2\": \"$p2_precision\"}"$'\n'
 
 
       

@@ -6,5 +6,7 @@ format_output() {
         echo "$output" | ./jtbl -c
     elif [ "$format" == "jsonl" ]; then
         echo "$output" 
+    elif [ "$format" == "raw" ]; then
+        echo "$command_output" 
     fi 
 }

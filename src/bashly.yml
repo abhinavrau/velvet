@@ -22,6 +22,7 @@ commands:
   - curl
   - jq
   
+  
 - name: search
   alias: s
   help: Perform a single search query and outputs results as csv
@@ -32,14 +33,18 @@ commands:
     help: search query string
   
   flags:
-  - &format
-    long: --format
+  - long: --format
     short: -f
     arg: format
     help: format of output. CSV is default if no option is specified
-    allowed: [csv, table, jsonl]
+    allowed: [csv, table, jsonl, raw]
     default: csv
-    
+
+  dependencies:
+  - curl
+  - jq 
+  
+   
      
 - name: bsearch
   alias: b
@@ -51,8 +56,18 @@ commands:
     help: Text file name containing queries. One per line. 
 
   flags:
-    - *format
-    
+  - &format
+    long: --format
+    short: -f
+    arg: format
+    help: format of output. CSV is default if no option is specified
+    allowed: [csv, table, jsonl]
+    default: csv
+  
+  dependencies:
+  - curl
+  - jq  
+  
 - name: verify
   alias: v
   help: Perform a batch search and verify using an input csv file that outputs to JSON lines.
@@ -72,6 +87,11 @@ commands:
   
   flags:
   - *format
+  
+  dependencies:
+  - curl
+  - jq 
+  - bc 
   
 examples: |-
     Using the Alphabet financial reports and 10Ks datastore from https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from
