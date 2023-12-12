@@ -6,13 +6,16 @@ For offline evaluation metric creation for Vertex AI Search
  
 ## Features
 - Call [Vertex AI Search](https://cloud.google.com/enterprise-search) API from the command line
-- Output to CSV, JSONL
-- Ouput to a human readable table format.
-- Batch verification for Acceptance testing. Produces:
-    - Summary Precision : semantically match using PaLM2 text-bison
-    - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG). 
-- Summary of MMR, mAP, NDCG
-- Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to integrate into CI pipelines.
+- Output to CSV, JSONL and to a human readable table format.
+- Batch verification for Acceptance testing with CSV file with queries and expected summary and document links and produces:
+  - **Summary Precision**: semantically match using PaLM2 text-bison
+  - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG).  
+  - Overall Summary precision and MMR with ability to fail the script if below threshold.
+- Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to make changes and integrate into your workflow.
+
+## Limitations
+  - Currently only supports unstructured search.
+
 
 ## Examples
 The folliwng use the Alphabet annual reports and 10K filings. See [this link](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to set it up.
@@ -87,15 +90,17 @@ $ export VAI_SEARCH_DATASTORE_NAME=<vertex-ai-search-search_datastore_name>  # D
 $ export TEXT_BISON_PROJECT_ID=<palm-text-bison-project-id> # used by verify command to match summaries 
 $ export TEXT_BISON_LOCATION_ID=<palm-text-bison-region-name> # used by verify command to match summaries 
 ```
-3. Install dependent tools. This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) and verifies gcloud auth.
+3. Install dependent tools. 
 
 ```bash
 ./vlvt init
 ```
-
+This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) and verifies gcloud auth.
 
 ## Full Usage
-
+```bash
+./vlvt --help
+```
 ## Development
 
 1. Install [bashly](https://bashly.dannyb.co/installation/) 
