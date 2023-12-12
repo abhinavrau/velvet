@@ -2,7 +2,7 @@
 🔮 <u>Ve</u>rtex AI Search <u>Ve</u>rfication <u>T</u>ool
 
 ## Why?
-For offline evaluation metric creation for Vertex AI Search
+For offline evaluation metrics for Vertex AI Search. Coz testing manually is hard and no fun!
  
 ## Features
 - Call [Vertex AI Search](https://cloud.google.com/enterprise-search) API from the command line
