@@ -5,13 +5,12 @@
 For offline search testing and evaluation metrics for Vertex AI Search. Coz testing manually is hard and no fun!
  
 ## Features
-- Batch verification for Acceptance testing with CSV file with queries and expected summary and document links and produces:
+- Batch verification for Acceptance testing. Takes a csv file with search queries and expected results to produce:
   - **Summary Precision**: semantically match using PaLM2 text-bison
   - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG).  
-  - Overall Summary precision and MMR with ability to fail the script if below threshold.
+  - Overall Summary precision and MRR with the ability to fail the script if these metrics fall below a specified threshold.
 - Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to make changes and integrate into your workflow.
-- Ability to set thresholds on average summary precision and MRR to fail the script if below threshold.
-- Output to CSV, JSONL and to a human readable table format in the terminal.
+- Output to CSV, JSONL and to a human readable table format in the terminal for easy debugging.
 
 
 ## Limitations
