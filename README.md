@@ -2,16 +2,17 @@
 🔮 <u>Ve</u>rtex AI Search <u>Ve</u>rfication <u>T</u>ool
 
 ## Why?
-For offline evaluation metrics for Vertex AI Search. Coz testing manually is hard and no fun!
+For offline search testing and evaluation metrics for Vertex AI Search. Coz testing manually is hard and no fun!
  
 ## Features
-- Call [Vertex AI Search](https://cloud.google.com/enterprise-search) API from the command line
-- Output to CSV, JSONL and to a human readable table format.
 - Batch verification for Acceptance testing with CSV file with queries and expected summary and document links and produces:
   - **Summary Precision**: semantically match using PaLM2 text-bison
   - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG).  
   - Overall Summary precision and MMR with ability to fail the script if below threshold.
 - Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to make changes and integrate into your workflow.
+- Ability to set thresholds on average summary precision and MRR to fail the script if below threshold.
+- Output to CSV, JSONL and to a human readable table format in the terminal.
+
 
 ## Limitations
   - Currently only supports unstructured search.
@@ -100,6 +101,10 @@ This installs [jtbl](https://github.com/kellyjonbrazil/jtbl) and verifies gcloud
 ## Full Usage
 ```bash
 ./vlvt --help
+```
+For command specific help
+```bash
+./vlvt <command> --help
 ```
 ## Development
 
