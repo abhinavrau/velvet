@@ -1,2 +1,4 @@
 jtbl*
-.vscode/
+.vscode
+.DS_Store
+*.zip

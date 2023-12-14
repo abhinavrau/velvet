@@ -2,25 +2,27 @@
 🔮 <u>Ve</u>rtex AI Search <u>Ve</u>rfication <u>T</u>ool
 
 ## Why?
-For offline search testing and evaluation metrics for Vertex AI Search. Coz testing manually is hard and no fun!
+Coz testing manually is hard, boring and no fun!
  
 ## Features
-- Batch verification for Acceptance testing. Takes a csv file with search queries and expected results to produce:
+- Generates offline ranking metrics for Vertex AI Search. Takes a csv file with search queries and expected results to produce:
   - **Summary Precision**: semantically match using PaLM2 text-bison
   - Precision@0, Mean Average Precision (mAP), Mean Reciprocal Rank (MRR), Normalized Discounted Cumulative Gain (NDCG).  
   - Overall Summary precision and MRR with the ability to fail the script if these metrics fall below a specified threshold.
-- Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to make changes and integrate into your workflow.
+- Single Bash script [vlvt](vlvt) with minimal dependencies so its easy to use in the most restricted evironments. 
+- Easy to make changes and integrate into your workflow for automated acceptance testing.
 - Output to CSV, JSONL and to a human readable table format in the terminal for easy debugging.
 
 
 ## Limitations
-  - Currently only supports unstructured search.
+  - Currently only supports unstructured search. 
+  - Uses summary and first 2 documents search results to generate metrics.
 
 
 ## Examples
 The folliwng use the Alphabet annual reports and 10K filings. See [this link](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_and_preview_a_search_app_for_unstructured_data_from) on how to set it up.
 
-Batch search AND verify with input file [verify_test_with_prompt.csv](test/datatest/data/verify_test_with_prompt.csv)  containing search queries with expected results and output results to a csv file.
+Batch search AND verify with input file [verify_test_with_prompt.csv](test/data/verify_test_with_prompt.csv)  containing search queries with expected results and output results to a csv file.
 ```bash
 ./vlvt verify test/data/verify_test_with_prompt.csv --format=csv > verify_results.csv
 ```
@@ -31,7 +33,7 @@ Output as table format for humans
 ```
 ![](images/verify_table.png)
 
-Batch search with input file [batch_test_with_prompt.txt](test/datatest/data/batch_test_with_prompt.txt) containing search queries and output a table.
+Batch search with input file [batch_test_with_prompt.txt](test/data/batch_test_with_prompt.txt) containing search queries and output a table.
 ```bash
 ./vlvt bsearch test/datatest/data/batch_test_with_prompt.txt -f=csv > batch_results.csv
 ```
@@ -109,13 +111,13 @@ For command specific help
 
 1. Install [bashly](https://bashly.dannyb.co/installation/) 
 2. Git clone this repo and change to the directory
-3. Generate the vlvt script 
+3. To generate the vlvt script run:
 
 ```bash
 bashly generate
 ```
 
-4. Run the tests
+4. Run the tests:
 ```bash
 ./test.sh
 ```
