@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-question="You are expert financial analyst. Be terse. Answer the question breifly with just the facts. What is Google's revenue for year ending 2022?"
+question="You are an expert financial analyst. Be terse. Answer the question with minimal facts. What was Google Cloud division's total revenue in 2022"
 
 function test_search_csv() {
 
